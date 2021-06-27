@@ -12,10 +12,14 @@
 3.加载解析配置
 
 ## 瓦片编辑器
-[编辑器链接](https://anseyuyin.github.io/wfc2D/demos/2DMapEditor/)
+
 - ##### 编辑器使用：
+
 1.加载数据
+
 2.编辑
+
 3.保存文件
 
+[编辑器链接](https://anseyuyin.github.io/wfc2D/demos/2DMapEditor/)
 [![image](./res/info/editor_course.gif)](https://anseyuyin.github.io/wfc2D/demos/2DMapEditor/)
