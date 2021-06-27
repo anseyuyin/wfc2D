@@ -4,7 +4,7 @@
 
 [![image](./info/cover.png)](https://anseyuyin.github.io/wfc2D/res/info)
 
-[样例](https://anseyuyin.github.io/wfc2D/demos/2DMapEditor/) 
+[样例](https://anseyuyin.github.io/wfc2D/demos/2DMapExample/) 
 
 ## 快速开始
 1.编辑数据
