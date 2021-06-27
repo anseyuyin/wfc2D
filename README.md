@@ -1,7 +1,7 @@
 # wfc2D
 ##说明
 通过波函数坍塌（Wave Function Collapse）算法，生成 2d 地图。
-
+[![image](./cover.png)](https://anseyuyin.github.io/wfc2D/res/info/)
 [样例](https://anseyuyin.github.io/wfc2D/demos/2DMapEditor/) 
 
 ##快速开始
@@ -15,3 +15,5 @@
 1.加载数据
 2.编辑
 3.保存文件
+
+[![image](./editor_course.gif)](https://anseyuyin.github.io/wfc2D/res/info/)
