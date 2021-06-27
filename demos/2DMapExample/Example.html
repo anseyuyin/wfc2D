@@ -1,0 +1,59 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>tiles Editor</title>
+    <script src="../../bin/wfc2D.js"></script>
+    <script src="../lib/system.js"></script>
+    <script src="../lib/jszip.js"></script>
+    <script src="../lib/FileSaver.min.js"></script>
+    <script>
+        SystemJS.import('bin/Example2DMap.js').then(function (m) {
+            document["Example2DMap"] = new m.Example2DMap();
+
+        });
+    </script>
+</head>
+
+<body>
+
+    <style>
+        div {
+            background: #e6e6e6;
+            height: 200px;
+            border: 10px double #bbbbbb;
+        }
+    </style>
+    <div style="height: 500px; overflow-x: auto; overflow-y:auto;">
+        <canvas id="viewCanvas" >
+        </canvas>
+    </div>
+    <div style="height: auto;">
+        <li id="importFolderLi" style="list-style-type: none;">
+            加载 (本地文件夹)<input type="file" id="selectFiles" style="height: 30px;" multiple webkitdirectory />
+        </li>
+        <li id="importSampleLi" style="list-style-type: none;">
+            加载 (样例)
+            <select id="selectOption">
+                <option value="Circuit">Circuit</option>
+                <option value="test">test</option>
+            </select>
+        </li>
+        <input type="button" id="importFiles" value="开始" style="height: 30px; width: 80px;" multiple
+            webkitdirectory />
+        <li id="SWOptionLi" style="list-style-type: none;">
+            ----------------------- 操作选项 ----------------------------<br />
+            尺寸<input type="number" id="tilePixel" value="25" style="height: 20px; width: 50px;" />(tile 像素大小)<br />
+            
+            宽<input type="number" id="tileXCount" value="30" style="height: 20px; width: 50px;" />
+            高<input type="number" id="tileYCount" value="30" style="height: 20px; width: 50px;" />(tile数量)<br />
+            最大回退<input type="number" id="backoffMax" value="300" step="10" style="height: 20px; width: 50px;" />
+            回退缓存数<input type="number" id="backoffQueueMax" value="3" style="height: 20px; width: 50px;" />
+            缓存率<input type="number" id="backoffCapRate" value="0.02" step="0.05" min="0" max="1" style="height: 20px; width: 50px;" />
+        </li>
+    </div>
+</body>
+
+
+</html>

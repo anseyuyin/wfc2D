@@ -1,0 +1,80 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>tiles Editor</title>
+    <script src="../lib/system.js"></script>
+    <script src="../lib/jszip.js"></script>
+    <script src="../lib/FileSaver.min.js"></script>
+    <script src="./bin/Editor2DMap.js"></script>
+    <script>
+        SystemJS.import('bin/Editor2DMap.js').then(function (m) {
+            document["Editor2DMap"] = new m.Editor2DMap();
+
+        });
+    </script>
+</head>
+
+<body>
+
+    <style>
+        div {
+            background: #e6e6e6;
+            height: 200px;
+            border: 10px double #bbbbbb;
+        }
+    </style>
+    <div style="height: 110px;">
+        <li id="importFolderLi" style="list-style-type: none;">
+            加载 (本地文件夹)<input type="file" id="selectFiles" style="height: 30px;" multiple webkitdirectory />
+        </li>
+        <li id="importSampleLi" style="list-style-type: none;">
+            加载 (样例)
+            <select id="selectOption">
+                <option value="test">test</option>
+                <option value="Circuit">Circuit</option>
+            </select>
+            <input type="button" id="importFiles" value="开始" style="height: 30px; width: 80px;" multiple
+                webkitdirectory />
+        </li>
+        <!-- <input type="button" id="import" value="导入"/> -->
+        <li id="exportLi" style="list-style-type: none;">
+            导出 <input type="button" id="exportFiles" value="开始" style="height: 30px; width: 80px;" />
+        </li>
+        <li id="SWOptionLi" style="list-style-type: none;">
+            ----------------------- 操作选项 ----------------------------<br/>
+            <input type="button" id="swOptionAll" value="全选" style="height: 20px; width: 50px;" />
+            <input type="button" id="swOptionCancel" value="全取消" style="height: 20px; width: 50px;" />
+        </li>
+    </div>
+
+    <li id="tilesViewLi" class="tiles_view_div" style="list-style-type: none;">
+        <div class="tileViewContain" id="tileVcont" style="height: 200px;">
+        </div>
+    </li>
+
+    <li id="tilesInfoLi" class="tiles_info_div" style="list-style-type: none; ">
+        <div class="tileInfoContain" id="tileInfocont" style="height: 110px;">
+            资源名：(*.png | *.jpg)<br />
+            权重值：(数值)<br />
+            可旋转：(1,2,3)<br />
+        </div>
+    </li>
+
+    <li id="tilesSelectLi" class="tiles_select_div" style="list-style-type: none;">
+        <div class="tileSelectContain" id="tileScont" style="height: 100px;  overflow-x: scroll">
+
+        </div>
+    </li>
+
+    <li id="tilesVSLi" style="list-style-type: none;">
+        <div class="tileVSContain" id="tileVScont"
+            style="height: 300px; width: 300px; margin: 0 auto; position: relative; border :none">
+        </div>
+    </li>
+
+</body>
+
+
+</html>

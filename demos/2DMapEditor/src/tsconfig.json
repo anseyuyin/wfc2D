@@ -1,0 +1,23 @@
+{
+    "compilerOptions": {
+    "target": "es5",
+    "lib": [
+        "es5",
+        "dom",
+        "es2015.promise",
+        "ES2015.Core"
+    ],
+    "module":"system",
+    "declaration": true,
+	"noImplicitAny": false,
+    "sourceMap": true,
+    "removeComments": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    //"outFile": "../bin/astar.js",
+    "outDir":"../bin"
+  },
+  "include": [
+    "../"
+  ]
+}

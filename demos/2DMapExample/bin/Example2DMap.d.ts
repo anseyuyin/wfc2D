@@ -1,0 +1,32 @@
+export declare class Example2DMap {
+    constructor();
+    private canvasEle;
+    private context2D;
+    private fileEle;
+    private selectOptionEle;
+    private importFilesEle;
+    private tileSizeEle;
+    private tileXCountEle;
+    private tileYCountEle;
+    private backoffMaxEle;
+    private backoffQueueMaxEle;
+    private backoffCapRateEle;
+    private currConfig;
+    private currImgMap;
+    private dataMap;
+    private dataLoginMap;
+    private wfc2dMap;
+    private resLoaded;
+    private toRadian;
+    private filesID;
+    private isCalculateing;
+    private init;
+    private setUI;
+    private initCanvas;
+    private calculate;
+    private refrashCanvas;
+    private onStart;
+    private toLoadImport;
+    private onFileChange;
+    private setDataByFileList;
+}
