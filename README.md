@@ -18,4 +18,4 @@
 2.编辑
 3.保存文件
 
-[![image](./editor_course.gif)](https://anseyuyin.github.io/wfc2D/res/info/)
+[![image](./info/editor_course.gif)](https://anseyuyin.github.io/wfc2D/res/info)
