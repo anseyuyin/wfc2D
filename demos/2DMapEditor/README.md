@@ -11,6 +11,9 @@
 - ##### 编辑素材资源
 ![image](../../res/info/editorDetail.png)
 
+- ##### 检查边的连接
+![image](../../res/info/editorEdgeConnet.png)
+
 - ##### 保存到本地
 ![image](../../res/info/editorDownload.png)
 
