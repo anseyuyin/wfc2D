@@ -9,6 +9,7 @@
 ## 快速开始
 - ##### 准备好演算数据
     获取方式一：直接测试样例 res/samples/*
+    
     获取方式二：准备一个放置好素材的文件夹 ==> 使用 "[瓦片编辑器](https://github.com/anseyuyin/wfc2D/blob/main/demos/2DMapEditor/README.md) 打开编辑 ==> 保存
 
 - ##### 在浏览器中使用
