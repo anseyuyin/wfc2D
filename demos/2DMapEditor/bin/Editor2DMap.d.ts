@@ -1,9 +1,11 @@
 export declare class Editor2DMap {
     constructor();
+    private readonly dataFile;
+    private readonly editorFile;
+    private readonly rotateList;
     private size;
     private vsTileSacle;
     private gap;
-    private readonly rotateList;
     private selectEle;
     private fileEle;
     private selectOptionEle;
@@ -11,6 +13,8 @@ export declare class Editor2DMap {
     private exportFileEle;
     private swOptionAllEle;
     private swOptionCancelEle;
+    private viewEditorModeEle;
+    private viewDeActiveModeEle;
     private infoEle;
     private vsTiles;
     private currTilePackage;
@@ -47,8 +51,10 @@ export declare class Editor2DMap {
     private setSelectByID;
     private onExportClik;
     private allViewSelect;
+    private allViewActiveCKbox;
     private mergeConfig;
     private neighborParse;
+    private setDefTileImg;
     private onFileChange;
     private setDataByFileList;
     private onSelectImport;

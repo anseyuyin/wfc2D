@@ -51,14 +51,19 @@ System.register([], function (exports_1, context_1) {
             var l = val.left;
             var r = val.right;
             var rid = connectIdR[r];
+            var tempM = mapR[r];
             if (rid == null) {
-                rid = connectIdL[l];
+                for (var k in tempM) {
+                    rid = connectIdL[k];
+                    if (rid != null) {
+                        break;
+                    }
+                }
                 if (rid == null) {
                     rid = ++rCount;
                 }
                 connectIdR[r] = rid;
             }
-            var tempM = mapR[r];
             for (var k in tempM) {
                 connectIdL[k] = rid;
             }

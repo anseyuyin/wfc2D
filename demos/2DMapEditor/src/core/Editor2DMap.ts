@@ -8,13 +8,15 @@ export class Editor2DMap {
     constructor() {
         this.init();
     }
+    private readonly dataFile = "data.json";
+    private readonly editorFile = "editor.json";
+    private readonly rotateList = [0, 1, 2, 3];
     /** 瓦片基础尺寸 */
     private size = 100;
     /** 比较瓦片 缩放值 */
     private vsTileSacle = 1.5;
     /** 瓦片基础 间距  */
     private gap = 10;
-    private readonly rotateList = [0, 1, 2, 3];
     private selectEle: HTMLElement;
     private fileEle: HTMLInputElement;
     private selectOptionEle: HTMLSelectElement;
@@ -22,6 +24,8 @@ export class Editor2DMap {
     private exportFileEle: HTMLInputElement;
     private swOptionAllEle: HTMLInputElement;
     private swOptionCancelEle: HTMLInputElement;
+    private viewEditorModeEle: HTMLInputElement;
+    private viewDeActiveModeEle: HTMLInputElement;
     private infoEle: HTMLElement;
     private vsTiles: Tile[] = [];
     private currTilePackage: tilePackage;
@@ -168,6 +172,12 @@ export class Editor2DMap {
         this.swOptionAllEle.onclick = () => { this.allViewSelect(true); };
         this.swOptionCancelEle = document.getElementById("swOptionCancel") as HTMLInputElement;
         this.swOptionCancelEle.onclick = () => { this.allViewSelect(false); };
+
+        //viewClickEditorMode
+        this.viewEditorModeEle = document.getElementById("viewEditorMode") as HTMLInputElement;
+        this.viewEditorModeEle.onchange = () => { this.allViewActiveCKbox(this.viewDeActiveModeEle.checked); };
+        this.viewDeActiveModeEle = document.getElementById("viewDeActiveMode") as HTMLInputElement;
+        this.viewDeActiveModeEle.onchange = () => { this.allViewActiveCKbox(this.viewDeActiveModeEle.checked); };
 
         //vs tiles
         this.setVSTiles();
@@ -360,19 +370,19 @@ export class Editor2DMap {
 
     /** 设置 比较 瓦片指定边 */
     private setVSEdge(resName: string, rotateType: number, centerRotateT: number) {
+        //get tile
         let vsTile = this.vsTiles[centerRotateT + 1];
         let t = this.resNameImgMap[resName];
         //当前位置旋转
-        let realR = rotateType - centerRotateT + 4;
-        realR %= 4;
-        vsTile.rotateType = realR;
+        vsTile.rotateType = rotateType;
         vsTile.resName = resName;
         //资源
         vsTile.setImgUrl(t.dataB64);
-        //
+        //get map
         let _viewResName = this.viewIdNameMap[this.currViewID];
         let _nCenter = `${getImgBaseName(_viewResName)}_${centerRotateT}`;
         let _map = this.getValidNeighborMap(_nCenter);
+        //edge
         let _rEdgeID = getRightEdgeNum(vsTile.rotateType, centerRotateT);
         let _nRight = `${getImgBaseName(resName)}_${_rEdgeID}`;
         let isActive = _map[_nRight] ? true : false;
@@ -420,12 +430,25 @@ export class Editor2DMap {
 
         let zip = new JSZip();
         let data = this.mergeConfig(tileP.config);
+
+        //---------data.json 文件--------
         let n = data.neighbor;
+        let dea = data.deactivate;//不导出 deactivate
         delete data.neighbor;   //不导出 neighbor数据
-        zip.file("data.json", JSON.stringify(data));
+        zip.file(this.dataFile, JSON.stringify(data));
         data.neighbor = n;
-        // let img = zip.folder("images");
-        // img.file("smile.gif", imgData, { base64: true });
+        data.deactivate = dea;
+        //------------------------------
+
+        //---------editor.json 文件--------
+        let nL = data.connectIdL;
+        let nR = data.connectIdR;
+        delete data.connectIdL;   //不导出 connectIdL
+        delete data.connectIdR;   //不导出 connectIdR
+        zip.file(this.editorFile, JSON.stringify(data));
+        data.connectIdL = nL;
+        data.connectIdR = nR;
+        //------------------------------
 
         tileP.imgs.forEach((val, i) => {
             zip.file(val.fileName, dataURLtoBlob(val.dataB64), { base64: true });
@@ -444,15 +467,27 @@ export class Editor2DMap {
         }
     }
 
+    private allViewActiveCKbox(isEnable: boolean) {
+        for (let k in this.viewTilesMap) {
+            let v = this.viewTilesMap[k];
+            if (!v) { continue; }
+            isEnable ? v.enableActiveCkbox() : v.disableActiveCkbox();
+            v.active = v.active;
+        }
+    }
+
     /** 合并整理 配置信息 */
     private mergeConfig(_conf: tileConfig): tileConfig {
         if (!this.neighborDirty) { return _conf; }
         this.neighborDirty = false;
         let result: tileConfig = {} as any;
         result.tiles = _conf.tiles;
+        result.deactivate = _conf.deactivate;
+
         //tiles
 
         //neighbor merge
+        let nArrLimit: neighborData[] = [];
         let nArr: neighborData[] = [];
         // let keys = Object.keys(this.currNeighborMap);
         for (let _left in this.currNeighborMap) {
@@ -461,12 +496,17 @@ export class Editor2DMap {
                 let temp: neighborData = { left: _left, right: _right };
                 if (_map[_right]) {
                     nArr.push(temp);
+                    let L = _left.substring(0, _left.length - 2);
+                    let R = _right.substring(0, _right.length - 2);
+                    if (!_conf.deactivate[L] && !_conf.deactivate[R]) {
+                        nArrLimit.push(temp);
+                    }
                 }
             }
         }
-        _conf.neighbor = nArr;
+        result.neighbor = nArr;
         //convert 2 connectId
-        let _tempC = kv2ConnectID(_conf.neighbor);
+        let _tempC = kv2ConnectID(nArrLimit);
         result.connectIdL = _tempC.connectIdL;
         result.connectIdR = _tempC.connectIdR;
         return result;
@@ -478,6 +518,14 @@ export class Editor2DMap {
             let _map = this.getValidNeighborMap(val.left);
             _map[val.right] = true;
         });
+    }
+
+    /** 通过 图片文件名 设置默认TileImg */
+    private setDefTileImg(imgFileName: string, conf: tileConfig) {
+        let idx = imgFileName.lastIndexOf(".");
+        let imgName = imgFileName.substring(0, idx);
+        let suffix = imgFileName.substring(idx);
+        conf.tiles[imgName] = [suffix, 1, [1, 2, 3]];
     }
 
     /** 当加载本地文件夹时 */
@@ -517,23 +565,48 @@ export class Editor2DMap {
             if (!_config.tiles) {
                 _config.tiles = {};
                 _imgs.forEach((v) => {
-                    let idx = v.fileName.lastIndexOf(".");
-                    let imgName = v.fileName.substring(0, idx);
-                    let suffix = v.fileName.substring(idx);
-                    _config.tiles[imgName] = [suffix, 1, [1, 2, 3]];
+                    this.setDefTileImg(v.fileName, _config);
                 });
+            } else {
+                //检查实际图片 和 配置是否有差异
+                let _imgNameMap = {};
+                _imgs.forEach((v) => {
+                    let fn = v.fileName;
+                    let imgName = fn.substring(0, fn.lastIndexOf("."));
+                    _imgNameMap[imgName] = true;
+                    if (_config.tiles[imgName] == null) {
+                        //补上新增加的图片
+                        this.setDefTileImg(v.fileName, _config);
+                    }
+                });
+                //去除不存在的图片（被删除了）
+                for (let k in _config.tiles) {
+                    if (_imgNameMap[k]) { continue; }
+                    delete _config.tiles[k];
+                }
             }
-            // if (!_config.neighbor) { _config.neighbor = []; }
+
             if (!_config.connectIdL) { _config.connectIdL = {}; }
             if (!_config.connectIdR) { _config.connectIdR = {}; }
-            //set 2 neighbor kv
-            _config.neighbor = connectID2KV(_config.connectIdL, _config.connectIdR);
+            if (!_config.deactivate) { _config.deactivate = {}; }
+
+            // //set 2 neighbor kv
+            // _config.neighbor = connectID2KV(_config.connectIdL, _config.connectIdR);
+
+            if (!_config.neighbor) { _config.neighbor = []; }
 
             //make package
             this.currTilePackage = { imgs: _imgs, config: (_config as any) };
             this.neighborParse(this.currTilePackage.config.neighbor);
             //on
             this.setView(_imgs);
+
+            //deactive
+            for (let k in this.viewTilesMap) {
+                let v = this.viewTilesMap[k];
+                if (!v) { continue; }
+                v.active = _config.deactivate[getImgBaseName(v.resName)] != true;
+            }
 
             //def select state set
             if (this.isSwitchMode) {
@@ -558,7 +631,7 @@ export class Editor2DMap {
             let isImg = false;
             if (arr[0] == "image") {
                 isImg = true;
-            } else if (arr[1] == "json" && f.name == "data.json") {
+            } else if (arr[1] == "json" && f.name == this.editorFile) {
                 //是配置文件
 
             } else {
@@ -591,7 +664,7 @@ export class Editor2DMap {
     private async onSelectImport() {
         let resName = this.selectOptionEle.value;
         let basePath = `../../../../res/samples/`;
-        let _dataUrl = `${basePath}${resName}/data.json`;
+        let _dataUrl = `${basePath}${resName}/${this.editorFile}`;
         let req = await xhrLoad(_dataUrl, "json");
         let data = req.response;
         if (!data) {
@@ -714,25 +787,36 @@ export class Editor2DMap {
     /** 当 view 瓦片被点击 */
     private onViewTileClick(t: TileView) {
         console.log(`onViewTileClick : ${t}`);
+        if (this.viewEditorModeEle.checked) {
+            //编辑模式
 
-        if (this.isSwitchMode) {
-            t.setSelect(!t.isSelect);
+            if (this.isSwitchMode) {
+                t.setSelect(!t.isSelect);
 
+            } else {
+                this.allViewSelect(false);
+                t.setSelect(!t.isSelect);
+                //设置tile信息
+                let resName = this.viewIdNameMap[t.getID()];
+                let onlyName = resName.substr(0, resName.length - 4);
+                let _conf = this.currTilePackage.config.tiles[onlyName];
+                // this.setInfo(, 1, [1, 1]);
+                let temp: number[] = _conf[2] ? _conf[2] : [];
+                this.setInfo(resName, _conf[1], temp);
+
+                //dis event
+                let ev = { id: t.getID() };
+                EventManager.dispatchEvent("view_editor", ev);
+            }
         } else {
-            this.allViewSelect(false);
-            t.setSelect(!t.isSelect);
-            //设置tile信息
-            let resName = this.viewIdNameMap[t.getID()];
-            let onlyName = resName.substr(0, resName.length - 4);
-            let _conf = this.currTilePackage.config.tiles[onlyName];
-            // this.setInfo(, 1, [1, 1]);
-            let temp: number[] = _conf[2] ? _conf[2] : [];
-            this.setInfo(resName, _conf[1], temp);
-
-            //dis event
-            let ev = { id: t.getID() };
-            EventManager.dispatchEvent("view_editor", ev);
+            //失活 激活模式
+            t.active = !t.active;
+            let deactivate = this.currTilePackage.config.deactivate;
+            let imgBaseN = getImgBaseName(t.resName);
+            t.active ? delete deactivate[imgBaseN] : deactivate[imgBaseN] = true;
+            this.neighborDirty = true;
         }
+
     }
 
     /** 当 筛选瓦片被点击 */

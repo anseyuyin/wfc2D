@@ -59,19 +59,23 @@ export function kv2ConnectID(neighbors: neighborData[]): { connectIdR: connectID
     let rCount = 0;
     let connectIdR = {};
     let connectIdL = {};
+    //梳理归纳connectId
     neighbors.forEach((val, i) => {
         let l = val.left;
         let r = val.right;
         //right
         let rid = connectIdR[r];
+        let tempM: {} = mapR[r];
         if (rid == null) {
-            rid = connectIdL[l];
+            for (let k in tempM) {
+                rid = connectIdL[k];
+                if (rid != null) { break; }
+            }
             if (rid == null) {
                 rid = ++rCount;
             }
             connectIdR[r] = rid;
         }
-        let tempM: {} = mapR[r];
         for (let k in tempM) {
             connectIdL[k] = rid;
         }

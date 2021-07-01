@@ -138,7 +138,7 @@ export class Tile {
         if (!this._isEnableckbox) { return; }
         this._isEnableckbox = false;
         this.activeCKbox.parentElement.removeChild(this.activeCKbox);
-        this.activeCKbox.checked = true;
+        //this.activeCKbox.checked = true;
         this.activeCKbox.onchange(null);
         this.activeCKbox = null;
     }

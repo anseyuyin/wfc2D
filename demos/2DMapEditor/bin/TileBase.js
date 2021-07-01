@@ -130,7 +130,6 @@ System.register([], function (exports_1, context_1) {
                     }
                     this._isEnableckbox = false;
                     this.activeCKbox.parentElement.removeChild(this.activeCKbox);
-                    this.activeCKbox.checked = true;
                     this.activeCKbox.onchange(null);
                     this.activeCKbox = null;
                 };

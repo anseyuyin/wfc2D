@@ -53,10 +53,12 @@ System.register(["./EditorTools.js", "./EventManager.js", "./TileBase.js"], func
         execute: function () {
             Editor2DMap = (function () {
                 function Editor2DMap() {
+                    this.dataFile = "data.json";
+                    this.editorFile = "editor.json";
+                    this.rotateList = [0, 1, 2, 3];
                     this.size = 100;
                     this.vsTileSacle = 1.5;
                     this.gap = 10;
-                    this.rotateList = [0, 1, 2, 3];
                     this.vsTiles = [];
                     this.viewIdNameMap = {};
                     this.ViewResNameIDMap = {};
@@ -161,6 +163,10 @@ System.register(["./EditorTools.js", "./EventManager.js", "./TileBase.js"], func
                     this.swOptionAllEle.onclick = function () { _this.allViewSelect(true); };
                     this.swOptionCancelEle = document.getElementById("swOptionCancel");
                     this.swOptionCancelEle.onclick = function () { _this.allViewSelect(false); };
+                    this.viewEditorModeEle = document.getElementById("viewEditorMode");
+                    this.viewEditorModeEle.onchange = function () { _this.allViewActiveCKbox(_this.viewDeActiveModeEle.checked); };
+                    this.viewDeActiveModeEle = document.getElementById("viewDeActiveMode");
+                    this.viewDeActiveModeEle.onchange = function () { _this.allViewActiveCKbox(_this.viewDeActiveModeEle.checked); };
                     this.setVSTiles();
                 };
                 Editor2DMap.prototype.setVisible = function () {
@@ -306,9 +312,7 @@ System.register(["./EditorTools.js", "./EventManager.js", "./TileBase.js"], func
                 Editor2DMap.prototype.setVSEdge = function (resName, rotateType, centerRotateT) {
                     var vsTile = this.vsTiles[centerRotateT + 1];
                     var t = this.resNameImgMap[resName];
-                    var realR = rotateType - centerRotateT + 4;
-                    realR %= 4;
-                    vsTile.rotateType = realR;
+                    vsTile.rotateType = rotateType;
                     vsTile.resName = resName;
                     vsTile.setImgUrl(t.dataB64);
                     var _viewResName = this.viewIdNameMap[this.currViewID];
@@ -352,9 +356,18 @@ System.register(["./EditorTools.js", "./EventManager.js", "./TileBase.js"], func
                     var zip = new JSZip();
                     var data = this.mergeConfig(tileP.config);
                     var n = data.neighbor;
+                    var dea = data.deactivate;
                     delete data.neighbor;
-                    zip.file("data.json", JSON.stringify(data));
+                    zip.file(this.dataFile, JSON.stringify(data));
                     data.neighbor = n;
+                    data.deactivate = dea;
+                    var nL = data.connectIdL;
+                    var nR = data.connectIdR;
+                    delete data.connectIdL;
+                    delete data.connectIdR;
+                    zip.file(this.editorFile, JSON.stringify(data));
+                    data.connectIdL = nL;
+                    data.connectIdR = nR;
                     tileP.imgs.forEach(function (val, i) {
                         zip.file(val.fileName, EditorTools_js_1.dataURLtoBlob(val.dataB64), { base64: true });
                     });
@@ -372,6 +385,16 @@ System.register(["./EditorTools.js", "./EventManager.js", "./TileBase.js"], func
                         v.setSelect(isSelect);
                     }
                 };
+                Editor2DMap.prototype.allViewActiveCKbox = function (isEnable) {
+                    for (var k in this.viewTilesMap) {
+                        var v = this.viewTilesMap[k];
+                        if (!v) {
+                            continue;
+                        }
+                        isEnable ? v.enableActiveCkbox() : v.disableActiveCkbox();
+                        v.active = v.active;
+                    }
+                };
                 Editor2DMap.prototype.mergeConfig = function (_conf) {
                     if (!this.neighborDirty) {
                         return _conf;
@@ -379,6 +402,8 @@ System.register(["./EditorTools.js", "./EventManager.js", "./TileBase.js"], func
                     this.neighborDirty = false;
                     var result = {};
                     result.tiles = _conf.tiles;
+                    result.deactivate = _conf.deactivate;
+                    var nArrLimit = [];
                     var nArr = [];
                     for (var _left in this.currNeighborMap) {
                         var _map = this.currNeighborMap[_left];
@@ -386,11 +411,16 @@ System.register(["./EditorTools.js", "./EventManager.js", "./TileBase.js"], func
                             var temp = { left: _left, right: _right };
                             if (_map[_right]) {
                                 nArr.push(temp);
+                                var L = _left.substring(0, _left.length - 2);
+                                var R = _right.substring(0, _right.length - 2);
+                                if (!_conf.deactivate[L] && !_conf.deactivate[R]) {
+                                    nArrLimit.push(temp);
+                                }
                             }
                         }
                     }
-                    _conf.neighbor = nArr;
-                    var _tempC = EditorTools_js_1.kv2ConnectID(_conf.neighbor);
+                    result.neighbor = nArr;
+                    var _tempC = EditorTools_js_1.kv2ConnectID(nArrLimit);
                     result.connectIdL = _tempC.connectIdL;
                     result.connectIdR = _tempC.connectIdR;
                     return result;
@@ -401,6 +431,12 @@ System.register(["./EditorTools.js", "./EventManager.js", "./TileBase.js"], func
                         var _map = _this.getValidNeighborMap(val.left);
                         _map[val.right] = true;
                     });
+                };
+                Editor2DMap.prototype.setDefTileImg = function (imgFileName, conf) {
+                    var idx = imgFileName.lastIndexOf(".");
+                    var imgName = imgFileName.substring(0, idx);
+                    var suffix = imgFileName.substring(idx);
+                    conf.tiles[imgName] = [suffix, 1, [1, 2, 3]];
                 };
                 Editor2DMap.prototype.onFileChange = function (ev) {
                     var files = this.fileEle.files;
@@ -431,11 +467,25 @@ System.register(["./EditorTools.js", "./EventManager.js", "./TileBase.js"], func
                         if (!_config.tiles) {
                             _config.tiles = {};
                             _imgs.forEach(function (v) {
-                                var idx = v.fileName.lastIndexOf(".");
-                                var imgName = v.fileName.substring(0, idx);
-                                var suffix = v.fileName.substring(idx);
-                                _config.tiles[imgName] = [suffix, 1, [1, 2, 3]];
+                                _this.setDefTileImg(v.fileName, _config);
                             });
+                        }
+                        else {
+                            var _imgNameMap_1 = {};
+                            _imgs.forEach(function (v) {
+                                var fn = v.fileName;
+                                var imgName = fn.substring(0, fn.lastIndexOf("."));
+                                _imgNameMap_1[imgName] = true;
+                                if (_config.tiles[imgName] == null) {
+                                    _this.setDefTileImg(v.fileName, _config);
+                                }
+                            });
+                            for (var k in _config.tiles) {
+                                if (_imgNameMap_1[k]) {
+                                    continue;
+                                }
+                                delete _config.tiles[k];
+                            }
                         }
                         if (!_config.connectIdL) {
                             _config.connectIdL = {};
@@ -443,10 +493,22 @@ System.register(["./EditorTools.js", "./EventManager.js", "./TileBase.js"], func
                         if (!_config.connectIdR) {
                             _config.connectIdR = {};
                         }
-                        _config.neighbor = EditorTools_js_1.connectID2KV(_config.connectIdL, _config.connectIdR);
+                        if (!_config.deactivate) {
+                            _config.deactivate = {};
+                        }
+                        if (!_config.neighbor) {
+                            _config.neighbor = [];
+                        }
                         _this.currTilePackage = { imgs: _imgs, config: _config };
                         _this.neighborParse(_this.currTilePackage.config.neighbor);
                         _this.setView(_imgs);
+                        for (var k in _this.viewTilesMap) {
+                            var v = _this.viewTilesMap[k];
+                            if (!v) {
+                                continue;
+                            }
+                            v.active = _config.deactivate[EditorTools_js_1.getImgBaseName(v.resName)] != true;
+                        }
                         if (_this.isSwitchMode) {
                             _this.allViewSelect(true);
                         }
@@ -471,7 +533,7 @@ System.register(["./EditorTools.js", "./EventManager.js", "./TileBase.js"], func
                         if (arr[0] == "image") {
                             isImg = true;
                         }
-                        else if (arr[1] == "json" && f.name == "data.json") {
+                        else if (arr[1] == "json" && f.name == this_1.editorFile) {
                         }
                         else {
                             return "continue";
@@ -496,6 +558,7 @@ System.register(["./EditorTools.js", "./EventManager.js", "./TileBase.js"], func
                         };
                         waitCount++;
                     };
+                    var this_1 = this;
                     for (var i = 0, len = files.length; i < len; i++) {
                         var state_1 = _loop_1(i, len);
                         if (state_1 === "break")
@@ -509,8 +572,8 @@ System.register(["./EditorTools.js", "./EventManager.js", "./TileBase.js"], func
                             switch (_a.label) {
                                 case 0:
                                     resName = this.selectOptionEle.value;
-                                    basePath = "../../res/samples/";
-                                    _dataUrl = "" + basePath + resName + "/data.json";
+                                    basePath = "../../../../res/samples/";
+                                    _dataUrl = "" + basePath + resName + "/" + this.editorFile;
                                     return [4, EditorTools_js_1.xhrLoad(_dataUrl, "json")];
                                 case 1:
                                     req = _a.sent();
@@ -620,19 +683,28 @@ System.register(["./EditorTools.js", "./EventManager.js", "./TileBase.js"], func
                 };
                 Editor2DMap.prototype.onViewTileClick = function (t) {
                     console.log("onViewTileClick : " + t);
-                    if (this.isSwitchMode) {
-                        t.setSelect(!t.isSelect);
+                    if (this.viewEditorModeEle.checked) {
+                        if (this.isSwitchMode) {
+                            t.setSelect(!t.isSelect);
+                        }
+                        else {
+                            this.allViewSelect(false);
+                            t.setSelect(!t.isSelect);
+                            var resName = this.viewIdNameMap[t.getID()];
+                            var onlyName = resName.substr(0, resName.length - 4);
+                            var _conf = this.currTilePackage.config.tiles[onlyName];
+                            var temp = _conf[2] ? _conf[2] : [];
+                            this.setInfo(resName, _conf[1], temp);
+                            var ev = { id: t.getID() };
+                            EventManager_js_1.EventManager.dispatchEvent("view_editor", ev);
+                        }
                     }
                     else {
-                        this.allViewSelect(false);
-                        t.setSelect(!t.isSelect);
-                        var resName = this.viewIdNameMap[t.getID()];
-                        var onlyName = resName.substr(0, resName.length - 4);
-                        var _conf = this.currTilePackage.config.tiles[onlyName];
-                        var temp = _conf[2] ? _conf[2] : [];
-                        this.setInfo(resName, _conf[1], temp);
-                        var ev = { id: t.getID() };
-                        EventManager_js_1.EventManager.dispatchEvent("view_editor", ev);
+                        t.active = !t.active;
+                        var deactivate = this.currTilePackage.config.deactivate;
+                        var imgBaseN = EditorTools_js_1.getImgBaseName(t.resName);
+                        t.active ? delete deactivate[imgBaseN] : deactivate[imgBaseN] = true;
+                        this.neighborDirty = true;
                     }
                 };
                 Editor2DMap.prototype.onSelectTileClick = function (t) {
