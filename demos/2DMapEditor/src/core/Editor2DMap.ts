@@ -10,6 +10,7 @@ export class Editor2DMap {
     }
     private readonly dataFile = "data.json";
     private readonly editorFile = "editor.json";
+    private readonly exportFile = "export.zip";
     private readonly rotateList = [0, 1, 2, 3];
     /** 瓦片基础尺寸 */
     private size = 100;
@@ -464,7 +465,7 @@ export class Editor2DMap {
         });
         zip.generateAsync({ type: "blob" })
             .then((content) => {
-                saveAs(content, "example.zip");
+                saveAs(content, this.exportFile);
             });
     }
 

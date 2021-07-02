@@ -55,6 +55,7 @@ System.register(["./EditorTools.js", "./EventManager.js", "./TileBase.js"], func
                 function Editor2DMap() {
                     this.dataFile = "data.json";
                     this.editorFile = "editor.json";
+                    this.exportFile = "export.zip";
                     this.rotateList = [0, 1, 2, 3];
                     this.size = 100;
                     this.vsTileSacle = 1.5;
@@ -346,6 +347,7 @@ System.register(["./EditorTools.js", "./EventManager.js", "./TileBase.js"], func
                     this.setSelectArr(arr);
                 };
                 Editor2DMap.prototype.onExportClik = function () {
+                    var _this = this;
                     console.log("onExportClik");
                     var tileP = this.currTilePackage;
                     if (!tileP) {
@@ -384,7 +386,7 @@ System.register(["./EditorTools.js", "./EventManager.js", "./TileBase.js"], func
                     });
                     zip.generateAsync({ type: "blob" })
                         .then(function (content) {
-                        saveAs(content, "example.zip");
+                        saveAs(content, _this.exportFile);
                     });
                 };
                 Editor2DMap.prototype.allViewSelect = function (isSelect) {

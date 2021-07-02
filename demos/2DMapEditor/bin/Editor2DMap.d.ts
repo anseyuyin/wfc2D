@@ -2,6 +2,7 @@ export declare class Editor2DMap {
     constructor();
     private readonly dataFile;
     private readonly editorFile;
+    private readonly exportFile;
     private readonly rotateList;
     private size;
     private vsTileSacle;

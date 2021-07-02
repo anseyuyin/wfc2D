@@ -490,13 +490,12 @@ namespace WFC {
 
         /**
          * （同步版） 执行 坍塌,生成地图数据
-         * calculate once collapse
-         * @param width     地图宽度
-         * @param height    地图高度
-         * @param _dataArr   资源模型数据
-         * @param backOffMaxC   遇到失败时，返回到前状态重试的最大次数
-         * @param capQueueMaxLen   缓存前状态队列的最大长度
-         * @param capRate   缓存前状态队列的最大长度
+         * (sync ver) calculate once collapse
+         * @param width             地图宽度 width of map.
+         * @param height            地图高度 height of map.
+         * @param backOffMaxNum     遇到失败时，返回到前状态重试的最大次数 Max times of back off last state on collapse error.
+         * @param capQueueMaxLen    缓存前状态队列的最大长度 queue max length of capture last state.
+         * @param capRate           缓存率0-1 范围，决定间隔多少次坍塌周期缓存一次 rate of captrue (range 0 - 1), set cycle of capture state.   
          * @returns  
          */
         public collapseSync(width: number, height: number, backOffMaxNum?: number, capQueueMaxLen?: number, capRate?: number): [string, number][] {
@@ -515,13 +514,12 @@ namespace WFC {
         /**
          * 执行 坍塌,生成地图数据
          * calculate once collapse
-         * @param width     地图宽度
-         * @param height    地图高度
-         * @param _dataArr   资源模型数据
-         * @param backOffMaxC   遇到失败时，返回到前状态重试的最大次数
-         * @param capQueueMaxLen   缓存前状态队列的最大长度
-         * @param capRate   缓存前状态队列的最大长度
-         * @param frameMaxTime   每帧最大计算耗时(单位 秒)
+         * @param width             地图宽度 width of map.
+         * @param height            地图高度 height of map.
+         * @param backOffMaxNum     遇到失败时，返回到前状态重试的最大次数 Max times of back off last state on collapse error.
+         * @param capQueueMaxLen    缓存前状态队列的最大长度 queue max length of capture last state.
+         * @param capRate           缓存率0-1 范围，决定间隔多少次坍塌周期缓存一次 rate of captrue (range 0 - 1), set cycle of capture state.   
+         * @param frameMaxTime      每帧最大计算耗时(单位 秒) max time of spend on one frame. (calculation be split to more frame)
          * @returns  
          */
         // tslint:disable-next-line: max-line-length

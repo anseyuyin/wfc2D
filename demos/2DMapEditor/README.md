@@ -23,4 +23,10 @@
 ![image](../../res/info/editorDownload.png)
 
 
-
+##### 保存的文件结构
+```
+ export.zip
+    - data.json     //运行计算使用到的配置文件。
+    - editor.json   //编辑器使用的配置文件。
+    - images        //瓦片图片资源。
+```
