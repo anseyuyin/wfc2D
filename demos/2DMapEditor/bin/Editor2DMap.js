@@ -585,7 +585,7 @@ System.register(["./EditorTools.js", "./EventManager.js", "./TileBase.js"], func
                             switch (_a.label) {
                                 case 0:
                                     resName = this.selectOptionEle.value;
-                                    basePath = "../../../../res/samples/";
+                                    basePath = "../../res/samples/";
                                     _dataUrl = "" + basePath + resName + "/" + this.editorFile;
                                     return [4, EditorTools_js_1.xhrLoad(_dataUrl, "json")];
                                 case 1:

@@ -673,7 +673,7 @@ export class Editor2DMap {
     /** 当选择加载导入样例 */
     private async onSelectImport() {
         let resName = this.selectOptionEle.value;
-        let basePath = `../../../../res/samples/`;
+        let basePath = `../../res/samples/`;
         let _dataUrl = `${basePath}${resName}/${this.editorFile}`;
         let req = await xhrLoad(_dataUrl, "json");
         let data = req.response;
