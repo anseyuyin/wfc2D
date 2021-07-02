@@ -355,12 +355,23 @@ System.register(["./EditorTools.js", "./EventManager.js", "./TileBase.js"], func
                     var saveAs = globalThis.saveAs;
                     var zip = new JSZip();
                     var data = this.mergeConfig(tileP.config);
+                    var tiles = data.tiles;
                     var n = data.neighbor;
                     var dea = data.deactivate;
+                    var limitTiles = {};
+                    for (var k in tiles) {
+                        if (dea[k]) {
+                            continue;
+                        }
+                        limitTiles[k] = tiles[k];
+                    }
+                    data.tiles = limitTiles;
                     delete data.neighbor;
+                    delete data.deactivate;
                     zip.file(this.dataFile, JSON.stringify(data));
                     data.neighbor = n;
                     data.deactivate = dea;
+                    data.tiles = tiles;
                     var nL = data.connectIdL;
                     var nR = data.connectIdR;
                     delete data.connectIdL;

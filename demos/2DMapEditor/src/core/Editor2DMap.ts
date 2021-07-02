@@ -432,12 +432,21 @@ export class Editor2DMap {
         let data = this.mergeConfig(tileP.config);
 
         //---------data.json 文件--------
+        let tiles = data.tiles;
         let n = data.neighbor;
-        let dea = data.deactivate;//不导出 deactivate
+        let dea = data.deactivate;
+        let limitTiles = {};
+        for (let k in tiles) {
+            if (dea[k]) { continue; }
+            limitTiles[k] = tiles[k];
+        }
+        data.tiles = limitTiles;    //过滤deactivate
         delete data.neighbor;   //不导出 neighbor数据
+        delete data.deactivate;   //不导出 deactivate
         zip.file(this.dataFile, JSON.stringify(data));
         data.neighbor = n;
         data.deactivate = dea;
+        data.tiles = tiles;
         //------------------------------
 
         //---------editor.json 文件--------

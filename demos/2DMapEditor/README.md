@@ -11,6 +11,11 @@
 - ##### 编辑素材资源
 ![image](../../res/info/editorDetail.png)
 
+- ##### 激活状态切换
+##### 失活的瓦片，导出后不会参与逻辑运算，也可便于瓦片边连接错误筛查。
+
+![image](../../res/info/stateSW.png)
+
 - ##### 检查边的连接
 ![image](../../res/info/editorEdgeConnet.png)
 
