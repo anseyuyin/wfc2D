@@ -1,5 +1,7 @@
 export declare class Editor2DMap {
     constructor();
+    private readonly outwardName;
+    private readonly outwardEditorInited;
     private readonly dataFile;
     private readonly editorFile;
     private readonly exportFile;

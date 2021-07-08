@@ -53,6 +53,8 @@ System.register(["./EditorTools.js", "./EventManager.js", "./TileBase.js"], func
         execute: function () {
             Editor2DMap = (function () {
                 function Editor2DMap() {
+                    this.outwardName = "__wfc2dEdt__";
+                    this.outwardEditorInited = "onEditorInited";
                     this.dataFile = "data.json";
                     this.editorFile = "editor.json";
                     this.exportFile = "export.zip";
@@ -134,6 +136,12 @@ System.register(["./EditorTools.js", "./EventManager.js", "./TileBase.js"], func
                     EventManager_js_1.EventManager.addListener("select_editor", this.onSelectEditor, this);
                     EventManager_js_1.EventManager.addListener("select_over", this.onSelectOver, this);
                     EventManager_js_1.EventManager.addListener("select_over_leave", this.onSelectLeave, this);
+                    var doc = this.importFilesEle.ownerDocument;
+                    doc[this.outwardName] = this;
+                    if (doc[this.outwardEditorInited]) {
+                        doc[this.outwardEditorInited]();
+                        delete doc[this.outwardEditorInited];
+                    }
                 };
                 Editor2DMap.prototype.setUI = function () {
                     var _this = this;
@@ -742,10 +750,16 @@ System.register(["./EditorTools.js", "./EventManager.js", "./TileBase.js"], func
                     console.log("onViewTileOver : " + t);
                 };
                 Editor2DMap.prototype.onBoderEnter = function (tile, edgeIdx) {
+                    if (this.isSwitchMode) {
+                        return;
+                    }
                     tile.setBoderColor(edgeIdx, 1);
                     this.lightRightEdges(tile, edgeIdx);
                 };
                 Editor2DMap.prototype.onBoderLeave = function (tile, edgeIdx) {
+                    if (this.isSwitchMode) {
+                        return;
+                    }
                     tile.setBoderColor(edgeIdx, 0);
                     this.offLightEdges();
                 };

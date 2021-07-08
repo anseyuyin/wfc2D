@@ -8,6 +8,8 @@ export class Editor2DMap {
     constructor() {
         this.init();
     }
+    private readonly outwardName = "__wfc2dEdt__";
+    private readonly outwardEditorInited = "onEditorInited";
     private readonly dataFile = "data.json";
     private readonly editorFile = "editor.json";
     private readonly exportFile = "export.zip";
@@ -125,6 +127,14 @@ export class Editor2DMap {
         EventManager.addListener("select_editor", this.onSelectEditor, this);
         EventManager.addListener("select_over", this.onSelectOver, this);
         EventManager.addListener("select_over_leave", this.onSelectLeave, this);
+
+        //全局暴露
+        let doc = this.importFilesEle.ownerDocument;
+        doc[this.outwardName] = this;
+        if (doc[this.outwardEditorInited]) {
+            doc[this.outwardEditorInited]();
+            delete doc[this.outwardEditorInited];
+        }
     }
 
     /** 初始化设置UI */
@@ -863,12 +873,14 @@ export class Editor2DMap {
 
     /**当 鼠标进入view瓦片的边区域 */
     private onBoderEnter(tile: TileView, edgeIdx: number) {
+        if (this.isSwitchMode) { return; }
         tile.setBoderColor(edgeIdx, 1);
         this.lightRightEdges(tile, edgeIdx);
     }
 
     /**当 鼠标 从view瓦片的边区域离开 */
     private onBoderLeave(tile: TileView, edgeIdx: number) {
+        if (this.isSwitchMode) { return; }
         tile.setBoderColor(edgeIdx, 0);
         this.offLightEdges();
     }

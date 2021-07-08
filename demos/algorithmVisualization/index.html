@@ -1,0 +1,87 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>A* FindPath</title>
+    <script src="../lib/system.js"></script>
+    <script src="../../bin/wfc2D.js"></script>
+    <script src="../lib/immutable.min.js"></script>
+    <script src="./bin/command.js"></script>
+    <script src="./bin/main.js"></script>
+    <script>
+        SystemJS.import('bin/main.js');
+    </script>
+</head>
+
+<body>
+
+    <style>
+        .rootContain {
+            width: 460px;
+            height: 560px;
+            margin: 0 auto;
+        }
+
+        .play_slidebar {
+            position: absolute;
+            left: 0;
+            right: 0;
+            width: 360px;
+            margin: auto;
+            margin-top: 20px;
+        }
+    </style>
+
+    <li class="cube_view_div" style="list-style-type: none; ">
+        <div class="rootContain" id="rootcont" style="background: #333333">
+        </div>
+    </li>
+
+    <li class="slide_div" style="list-style-type: none;height: 50px;">
+        <input class="play_slidebar" id="play_sb" type="range" min="0" max="10000" value="0" />
+    </li>
+
+    <li class="btn_div" style="list-style-type: none;height: 50px;">
+        <div>
+            <input id="btn_left" type="button"
+                style="position: absolute; left: 0 ;right: 110px ; width: 50px; height: 36px; margin: auto; margin-top: 5px"
+                value="|<" />
+            <input id="btn_center" type="button"
+                style="position: absolute; left: 0 ;right: 0 ; width: 46px; height: 36px; margin: auto; margin-top: 5px"
+                value="▷" />
+            <input id="btn_right" type="button"
+                style="position: absolute; left: 110px ;right: 0 ; width: 50px; height: 36px; margin: auto; margin-top: 5px"
+                value=">|" />
+        </div>
+    </li>
+
+    <li style="list-style-type: none;height: 100px;">
+        <input id="btn_generate" type="button"
+                style="position: absolute; left: 0 ;right: 0 ; width: 80px; height: 36px; margin: auto; margin-top: 5px"
+                value="生成" /> 
+                <br />
+    
+        <font size="3"
+            style="position: absolute;width: 50%; left: 0 ;right: 0 ; margin: auto; margin-top: 20px; text-align:center">
+            click button to generate map
+        </font>
+        <!-- <font size="3"
+            style="position: absolute;width: 50%; left: 0 ;right: 0 ; margin: auto; margin-top: 5px; text-align:center">
+            try to press any tow white block
+        </font> -->
+
+    </li>
+
+    <li id="tiles_view" style="list-style-type: none; height:auto; width: auto;">
+        
+    </li>
+
+    <script>
+
+    </script>
+
+</body>
+
+
+</html>
