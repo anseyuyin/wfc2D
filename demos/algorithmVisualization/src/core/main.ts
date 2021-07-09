@@ -96,7 +96,7 @@ export class Main {
     private progressNum = 0;
     private _isStop = false;
     private lastPerc = -1;
-    private tileView: any;
+    private tileViewObj: any;
 
     private playFun_Smooth() {
         if (this.isStop) { return; }
@@ -154,7 +154,7 @@ export class Main {
             default: return null;
         }
     }
-    private async init() {
+    private init() {
         this.testImmutable();
         //-------------------------------
 
@@ -196,7 +196,8 @@ export class Main {
         };
 
         this.btnGenerate.onclick = () => {
-            this.toGenerateMap();
+            let data = this.getWFC2DData();
+            this.toGenerateMap(data);
         };
 
         //插入 编辑查看工具
@@ -207,19 +208,39 @@ export class Main {
         this.tilesViewEle.appendChild(_iframe);
         _iframe.onload = () => {
             _iframe.contentDocument["onEditorInited"] = () => {
-                this.tileView = _iframe.contentDocument["__wfc2dEdt__"];
+                this.tileViewObj = _iframe.contentDocument["__wfc2dEdt__"];
             };
         };
     }
 
-    private async toGenerateMap() {
+    private getWFC2DData() {
+        let tvObj = this.tileViewObj;
+        if (!tvObj) { return; }
+        let currCfg: WFC.wfc2dData = tvObj.mergeConfig(tvObj.currTilePackage.config);
+        let arr: string[] = [];
+        for (let key in tvObj.viewTilesMap) {
+            let val = tvObj.viewTilesMap[key];
+            if (!val || val.isSelect) { continue; }
+            for (let i = 0; i < 4; i++) {
+                arr.push(`${key}_${i}`);
+            }
+        }
+
+        while (arr.length > 0) {
+            let k = arr.pop();
+            delete currCfg.connectIdL[k];
+            delete currCfg.connectIdR[k];
+        }
+        return currCfg;
+    }
+
+    private async toGenerateMap(_data: WFC.wfc2dData) {
         //wfc2D test
         let data: WFC.wfc2dData;
-        // let samplesName = "Circuit";
-        let jsonStr = await loadJson(`${this.resPath}${this.smpleName}/data.json`);
-        data = JSON.parse(jsonStr);
-        // let wfc = null;
-        // let ttt = WFC2D;
+        // let jsonStr = await loadJson(`${this.resPath}${this.smpleName}/data.json`);
+        // data = JSON.parse(jsonStr);
+        data = _data;
+
         // debugger;
         let wfc = new WFC.WFC2D(data);
 
@@ -230,6 +251,13 @@ export class Main {
         // this.AS.outFilter = (x, y) => {
         //     return mapTemp[y][x] != null && mapTemp[y][x] == 0;
         // };
+        let imgs = this.tileViewObj.currTilePackage.imgs;
+        let imgBas64 = {};
+        for (let key in imgs) {
+            let val = imgs[key];
+            let baseName = `${val.fileName.slice(0, val.fileName.length - 4)}`;
+            imgBas64[baseName] = val.dataB64;
+        }
         this.rootContain.style.width = this.rootContain.style.height = `${this.mapSize * (this.size + this.gap) - this.gap}px`;
         for (let y = 0; y < this.mapSize; y++) {
             //if(y!=0 )continue;
@@ -246,7 +274,9 @@ export class Main {
                 [imgName, rotate] = wfcResult.shift();
                 // let resN = data[].resName;
                 let resN = imgName;
-                let texturePath = `${this.resPath}${this.smpleName}/${resN}.png`;
+                // let texturePath = `${this.resPath}${this.smpleName}/${resN}.png`;
+                // let texturePath = `${this.resPath}${this.smpleName}/${resN}.png`;
+                let texturePath = imgBas64[resN];
                 this.genCell(li, x, y, rotate, texturePath);
             }
         }

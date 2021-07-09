@@ -812,7 +812,6 @@ export class Editor2DMap {
 
             if (this.isSwitchMode) {
                 t.setSelect(!t.isSelect);
-
             } else {
                 this.allViewSelect(false);
                 t.setSelect(!t.isSelect);

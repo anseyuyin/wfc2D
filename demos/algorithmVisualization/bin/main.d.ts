@@ -27,13 +27,14 @@ export declare class Main {
     private progressNum;
     private _isStop;
     private lastPerc;
-    private tileView;
+    private tileViewObj;
     private playFun_Smooth;
     private autoPlay;
     private adjustSlideByComLen;
     private commandsMoveByPercent;
     private colorByNum;
     private init;
+    private getWFC2DData;
     private toGenerateMap;
     private genCell;
     private testImmutable;

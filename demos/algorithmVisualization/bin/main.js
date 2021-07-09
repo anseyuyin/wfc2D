@@ -202,73 +202,96 @@ System.register(["./command.js"], function (exports_1, context_1) {
                     }
                 };
                 Main.prototype.init = function () {
-                    return __awaiter(this, void 0, void 0, function () {
-                        var _iframe;
-                        var _this = this;
-                        return __generator(this, function (_a) {
-                            this.testImmutable();
-                            this.slideBar.onmousedown = this.slideBar.ontouchstart = function () {
-                                _this.isStop = true;
-                            };
-                            this.slideBar.onchange = function () {
-                                _this.progressNum = Number(_this.slideBar.value);
-                                var perp = Number(_this.slideBar.value) / _this.slideRangeMax;
-                                _this.commandsMoveByPercent(perp);
-                            };
-                            this.slideBar.oninput = function () {
-                                _this.progressNum = Number(_this.slideBar.value);
-                                var perp = Number(_this.slideBar.value) / _this.slideRangeMax;
-                                _this.commandsMoveByPercent(perp);
-                            };
-                            this.btnCenter.onclick = function () {
-                                if (_this.isStop) {
-                                    _this.autoPlay();
-                                }
-                                else {
-                                    _this.isStop = true;
-                                }
-                            };
-                            this.btnLeft.onclick = function () {
-                                _this.isStop = true;
-                                command_js_1.CommandMgr.Instance.undo();
-                                _this.adjustSlideByComLen();
-                            };
-                            this.btnRight.onclick = function () {
-                                _this.isStop = true;
-                                command_js_1.CommandMgr.Instance.recovery();
-                                _this.adjustSlideByComLen();
-                            };
-                            this.btnGenerate.onclick = function () {
-                                _this.toGenerateMap();
-                            };
-                            _iframe = document.createElement("iframe");
-                            _iframe.style.width = "100%";
-                            _iframe.style.height = "500px";
-                            _iframe.src = "../2DMapEditor/index.html?swMode=1";
-                            this.tilesViewEle.appendChild(_iframe);
-                            _iframe.onload = function () {
-                                _iframe.contentDocument["onEditorInited"] = function () {
-                                    _this.tileView = _iframe.contentDocument["__wfc2dEdt__"];
-                                };
-                            };
-                            return [2];
-                        });
-                    });
+                    var _this = this;
+                    this.testImmutable();
+                    this.slideBar.onmousedown = this.slideBar.ontouchstart = function () {
+                        _this.isStop = true;
+                    };
+                    this.slideBar.onchange = function () {
+                        _this.progressNum = Number(_this.slideBar.value);
+                        var perp = Number(_this.slideBar.value) / _this.slideRangeMax;
+                        _this.commandsMoveByPercent(perp);
+                    };
+                    this.slideBar.oninput = function () {
+                        _this.progressNum = Number(_this.slideBar.value);
+                        var perp = Number(_this.slideBar.value) / _this.slideRangeMax;
+                        _this.commandsMoveByPercent(perp);
+                    };
+                    this.btnCenter.onclick = function () {
+                        if (_this.isStop) {
+                            _this.autoPlay();
+                        }
+                        else {
+                            _this.isStop = true;
+                        }
+                    };
+                    this.btnLeft.onclick = function () {
+                        _this.isStop = true;
+                        command_js_1.CommandMgr.Instance.undo();
+                        _this.adjustSlideByComLen();
+                    };
+                    this.btnRight.onclick = function () {
+                        _this.isStop = true;
+                        command_js_1.CommandMgr.Instance.recovery();
+                        _this.adjustSlideByComLen();
+                    };
+                    this.btnGenerate.onclick = function () {
+                        var data = _this.getWFC2DData();
+                        _this.toGenerateMap(data);
+                    };
+                    var _iframe = document.createElement("iframe");
+                    _iframe.style.width = "100%";
+                    _iframe.style.height = "500px";
+                    _iframe.src = "../2DMapEditor/index.html?swMode=1";
+                    this.tilesViewEle.appendChild(_iframe);
+                    _iframe.onload = function () {
+                        _iframe.contentDocument["onEditorInited"] = function () {
+                            _this.tileViewObj = _iframe.contentDocument["__wfc2dEdt__"];
+                        };
+                    };
                 };
-                Main.prototype.toGenerateMap = function () {
+                Main.prototype.getWFC2DData = function () {
+                    var tvObj = this.tileViewObj;
+                    if (!tvObj) {
+                        return;
+                    }
+                    var currCfg = tvObj.mergeConfig(tvObj.currTilePackage.config);
+                    var arr = [];
+                    for (var key in tvObj.viewTilesMap) {
+                        var val = tvObj.viewTilesMap[key];
+                        if (!val || val.isSelect) {
+                            continue;
+                        }
+                        for (var i = 0; i < 4; i++) {
+                            arr.push(key + "_" + i);
+                        }
+                    }
+                    while (arr.length > 0) {
+                        var k = arr.pop();
+                        delete currCfg.connectIdL[k];
+                        delete currCfg.connectIdR[k];
+                    }
+                    return currCfg;
+                };
+                Main.prototype.toGenerateMap = function (_data) {
                     return __awaiter(this, void 0, void 0, function () {
-                        var data, jsonStr, wfc, wfcResult, y, li, x, imgName, rotate, resN, texturePath;
+                        var data, wfc, wfcResult, imgs, imgBas64, key, val, baseName, y, li, x, imgName, rotate, resN, texturePath;
                         var _a;
                         return __generator(this, function (_b) {
                             switch (_b.label) {
-                                case 0: return [4, loadJson("" + this.resPath + this.smpleName + "/data.json")];
-                                case 1:
-                                    jsonStr = _b.sent();
-                                    data = JSON.parse(jsonStr);
+                                case 0:
+                                    data = _data;
                                     wfc = new WFC.WFC2D(data);
                                     return [4, wfc.collapse(this.mapSize, this.mapSize)];
-                                case 2:
+                                case 1:
                                     wfcResult = _b.sent();
+                                    imgs = this.tileViewObj.currTilePackage.imgs;
+                                    imgBas64 = {};
+                                    for (key in imgs) {
+                                        val = imgs[key];
+                                        baseName = "" + val.fileName.slice(0, val.fileName.length - 4);
+                                        imgBas64[baseName] = val.dataB64;
+                                    }
                                     this.rootContain.style.width = this.rootContain.style.height = this.mapSize * (this.size + this.gap) - this.gap + "px";
                                     for (y = 0; y < this.mapSize; y++) {
                                         li = document.createElement("li");
@@ -283,7 +306,7 @@ System.register(["./command.js"], function (exports_1, context_1) {
                                             rotate = void 0;
                                             _a = wfcResult.shift(), imgName = _a[0], rotate = _a[1];
                                             resN = imgName;
-                                            texturePath = "" + this.resPath + this.smpleName + "/" + resN + ".png";
+                                            texturePath = imgBas64[resN];
                                             this.genCell(li, x, y, rotate, texturePath);
                                         }
                                     }
