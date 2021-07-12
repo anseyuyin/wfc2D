@@ -1,4 +1,10 @@
 import { CommandMgr, setState, batState } from "./command.js";
+enum CType {
+    entropy,
+    tile,
+    state,
+}
+type wfcCommand = { [pos: number]: { ctype: CType, value: number } };
 
 //temp map data
 let mapTemp = [[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
@@ -244,8 +250,16 @@ export class Main {
         // debugger;
         let wfc = new WFC.WFC2D(data);
 
+        let proccessData: wfcCommand[] = [];
+        WFC["onProcess"] = (pos: number, ctype: number, value: number) => {
+            let _d = {};
+            _d[pos] = { ctype, value };
+            proccessData.push(_d);
+        };
+
         // let wfcResult = wfc.collapseSync(this.mapSize, this.mapSize);
         let wfcResult = await wfc.collapse(this.mapSize, this.mapSize);
+        debugger;
 
         //地图筛选
         // this.AS.outFilter = (x, y) => {

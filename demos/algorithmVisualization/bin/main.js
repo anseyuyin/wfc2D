@@ -36,7 +36,7 @@ System.register(["./command.js"], function (exports_1, context_1) {
             if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
         }
     };
-    var command_js_1, mapTemp, Main;
+    var command_js_1, CType, mapTemp, Main;
     var __moduleName = context_1 && context_1.id;
     function loadJson(path) {
         return new Promise(function (resolve, reject) {
@@ -88,6 +88,11 @@ System.register(["./command.js"], function (exports_1, context_1) {
             }
         ],
         execute: function () {
+            (function (CType) {
+                CType[CType["entropy"] = 0] = "entropy";
+                CType[CType["tile"] = 1] = "tile";
+                CType[CType["state"] = 2] = "state";
+            })(CType || (CType = {}));
             mapTemp = [[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
                 [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1],
                 [1, 0, 1, 0, 0, 0, 1, 0, 0, 1, 1, 1, 0, 0, 1],
@@ -275,16 +280,23 @@ System.register(["./command.js"], function (exports_1, context_1) {
                 };
                 Main.prototype.toGenerateMap = function (_data) {
                     return __awaiter(this, void 0, void 0, function () {
-                        var data, wfc, wfcResult, imgs, imgBas64, key, val, baseName, y, li, x, imgName, rotate, resN, texturePath;
+                        var data, wfc, proccessData, wfcResult, imgs, imgBas64, key, val, baseName, y, li, x, imgName, rotate, resN, texturePath;
                         var _a;
                         return __generator(this, function (_b) {
                             switch (_b.label) {
                                 case 0:
                                     data = _data;
                                     wfc = new WFC.WFC2D(data);
+                                    proccessData = [];
+                                    WFC["onProcess"] = function (pos, ctype, value) {
+                                        var _d = {};
+                                        _d[pos] = { ctype: ctype, value: value };
+                                        proccessData.push(_d);
+                                    };
                                     return [4, wfc.collapse(this.mapSize, this.mapSize)];
                                 case 1:
                                     wfcResult = _b.sent();
+                                    debugger;
                                     imgs = this.tileViewObj.currTilePackage.imgs;
                                     imgBas64 = {};
                                     for (key in imgs) {
