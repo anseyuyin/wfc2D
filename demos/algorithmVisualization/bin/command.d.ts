@@ -1,27 +1,6 @@
-export declare function setState(ehtml: HTMLElement, color: string, g?: number, h?: number): void;
-export declare function batState(States: {
-    ehtml: HTMLElement;
-    color: string;
-    g: number;
-    h: number;
-}[]): void;
 export interface ICommand {
     execute(): any;
     undo(): any;
-}
-export declare class StateData {
-    color: string;
-    g: number;
-    h: number;
-    constructor(color: string, g?: number, h?: number);
-}
-export declare class RectSetCommand implements ICommand {
-    htmle: HTMLElement;
-    sta: StateData;
-    constructor(htmle: HTMLElement, sta: StateData);
-    private lastSta;
-    execute(): void;
-    undo(): void;
 }
 export declare class BatchCommand implements ICommand {
     private comds;
@@ -40,4 +19,25 @@ export declare class CommandMgr {
     undo(): void;
     recovery(): void;
     clear(): void;
+}
+export declare function setState(ehtml: HTMLElement, color: string, g?: number, h?: number): void;
+export declare function batState(States: {
+    ehtml: HTMLElement;
+    color: string;
+    g: number;
+    h: number;
+}[]): void;
+export declare class StateData {
+    color: string;
+    g: number;
+    h: number;
+    constructor(color: string, g?: number, h?: number);
+}
+export declare class RectSetCommand implements ICommand {
+    htmle: HTMLElement;
+    sta: StateData;
+    constructor(htmle: HTMLElement, sta: StateData);
+    private lastSta;
+    execute(): void;
+    undo(): void;
 }

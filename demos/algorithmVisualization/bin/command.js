@@ -1,6 +1,6 @@
 System.register([], function (exports_1, context_1) {
     "use strict";
-    var StateData, RectSetCommand, BatchCommand, CommandMgr;
+    var BatchCommand, CommandMgr, StateData, RectSetCommand;
     var __moduleName = context_1 && context_1.id;
     function setState(ehtml, color, g, h) {
         if (g === void 0) { g = -1; }
@@ -21,52 +21,6 @@ System.register([], function (exports_1, context_1) {
     return {
         setters: [],
         execute: function () {
-            StateData = (function () {
-                function StateData(color, g, h) {
-                    if (g === void 0) { g = 0; }
-                    if (h === void 0) { h = 0; }
-                    this.color = color;
-                    this.g = g;
-                    this.h = h;
-                }
-                return StateData;
-            }());
-            exports_1("StateData", StateData);
-            RectSetCommand = (function () {
-                function RectSetCommand(htmle, sta) {
-                    this.htmle = htmle;
-                    this.sta = sta;
-                    var _g = this.htmle.getElementsByClassName("class_g")[0];
-                    var _h = this.htmle.getElementsByClassName("class_h")[0];
-                    this.lastSta = new StateData(htmle.style.background, Number(_g.textContent), Number(_h.textContent));
-                }
-                RectSetCommand.prototype.execute = function () {
-                    this.htmle.style.background = this.sta.color;
-                    var fText = this.htmle.getElementsByClassName("class_f")[0];
-                    var gText = this.htmle.getElementsByClassName("class_g")[0];
-                    var hText = this.htmle.getElementsByClassName("class_h")[0];
-                    fText.textContent = "" + (this.sta.g + this.sta.h);
-                    gText.textContent = "" + this.sta.g;
-                    hText.textContent = "" + this.sta.h;
-                    fText.style.display = this.sta.g + this.sta.h < 0 ? "none" : "";
-                    gText.style.display = this.sta.g < 0 ? "none" : "";
-                    hText.style.display = this.sta.h < 0 ? "none" : "";
-                };
-                RectSetCommand.prototype.undo = function () {
-                    this.htmle.style.background = this.lastSta.color;
-                    var fText = this.htmle.getElementsByClassName("class_f")[0];
-                    var gText = this.htmle.getElementsByClassName("class_g")[0];
-                    var hText = this.htmle.getElementsByClassName("class_h")[0];
-                    fText.textContent = "" + (this.lastSta.g + this.lastSta.h);
-                    gText.textContent = "" + this.lastSta.g;
-                    hText.textContent = "" + this.lastSta.h;
-                    fText.style.display = this.lastSta.g + this.lastSta.h < 0 ? "none" : "";
-                    gText.style.display = this.lastSta.g < 0 ? "none" : "";
-                    hText.style.display = this.lastSta.h < 0 ? "none" : "";
-                };
-                return RectSetCommand;
-            }());
-            exports_1("RectSetCommand", RectSetCommand);
             BatchCommand = (function () {
                 function BatchCommand() {
                     this.comds = [];
@@ -154,6 +108,52 @@ System.register([], function (exports_1, context_1) {
                 return CommandMgr;
             }());
             exports_1("CommandMgr", CommandMgr);
+            StateData = (function () {
+                function StateData(color, g, h) {
+                    if (g === void 0) { g = 0; }
+                    if (h === void 0) { h = 0; }
+                    this.color = color;
+                    this.g = g;
+                    this.h = h;
+                }
+                return StateData;
+            }());
+            exports_1("StateData", StateData);
+            RectSetCommand = (function () {
+                function RectSetCommand(htmle, sta) {
+                    this.htmle = htmle;
+                    this.sta = sta;
+                    var _g = this.htmle.getElementsByClassName("class_g")[0];
+                    var _h = this.htmle.getElementsByClassName("class_h")[0];
+                    this.lastSta = new StateData(htmle.style.background, Number(_g.textContent), Number(_h.textContent));
+                }
+                RectSetCommand.prototype.execute = function () {
+                    this.htmle.style.background = this.sta.color;
+                    var fText = this.htmle.getElementsByClassName("class_f")[0];
+                    var gText = this.htmle.getElementsByClassName("class_g")[0];
+                    var hText = this.htmle.getElementsByClassName("class_h")[0];
+                    fText.textContent = "" + (this.sta.g + this.sta.h);
+                    gText.textContent = "" + this.sta.g;
+                    hText.textContent = "" + this.sta.h;
+                    fText.style.display = this.sta.g + this.sta.h < 0 ? "none" : "";
+                    gText.style.display = this.sta.g < 0 ? "none" : "";
+                    hText.style.display = this.sta.h < 0 ? "none" : "";
+                };
+                RectSetCommand.prototype.undo = function () {
+                    this.htmle.style.background = this.lastSta.color;
+                    var fText = this.htmle.getElementsByClassName("class_f")[0];
+                    var gText = this.htmle.getElementsByClassName("class_g")[0];
+                    var hText = this.htmle.getElementsByClassName("class_h")[0];
+                    fText.textContent = "" + (this.lastSta.g + this.lastSta.h);
+                    gText.textContent = "" + this.lastSta.g;
+                    hText.textContent = "" + this.lastSta.h;
+                    fText.style.display = this.lastSta.g + this.lastSta.h < 0 ? "none" : "";
+                    gText.style.display = this.lastSta.g < 0 ? "none" : "";
+                    hText.style.display = this.lastSta.h < 0 ? "none" : "";
+                };
+                return RectSetCommand;
+            }());
+            exports_1("RectSetCommand", RectSetCommand);
         }
     };
 });

@@ -1,7 +1,8 @@
 var WFC;
 (function (WFC) {
-    var getPosId = (pos, w) => {
-        return (pos.y * w) + pos.x - 1;
+    var mapW = 0;
+    var getPosId = (pos) => {
+        return (pos.y * mapW) + pos.x;
     }
 
     WFC.onProcess = (pos, ctype, value) => {
@@ -445,6 +446,7 @@ var WFC;
             return result;
         };
         WFC2D.prototype.setData = function (width, height) {
+            mapW = width;
             var _this = this;
             var idList = this.idList;
             var states = this.initialCapture = [];
@@ -550,11 +552,11 @@ var WFC;
                 this.isComplete = true;
                 return;
             }
-            //---- select collapseNow tile
-            WFC.onProcess(getPosId(_select.position, this.width), 2, _select.getEntropy());
-            //----
             var success = _select.collapseNow();
             if (success) {
+                //---- select collapseNow tile
+                WFC.onProcess(getPosId(_select.position), 1, _select.models[0]);
+                //----
                 this.activeSlotMap.delete(_select.guid);
                 success = _select.transmit(this.solveCount);
             }
@@ -594,7 +596,18 @@ var WFC;
                 states = this.initialCapture;
             }
             this.allSlots.forEach(function (v, i) {
+                //---- chcek has change
+                let m = v.models.length > 1 ? -1 : v.models[0];
+                //----
+
                 v.applyCapture(states[i]);
+
+                //---- select collapseNow tile
+                let mCurr = v.models.length > 1 ? -1 : v.models[0];
+                if(mCurr != m){
+                    WFC.onProcess(getPosId(v.position), 1, mCurr);
+                }
+                //----
                 if (!v.isCollapse) {
                     _this.activeSlotMap.set(v.guid, v);
                 }

@@ -1,11 +1,14 @@
-import { CommandMgr, setState, batState } from "./command.js";
+import { CommandMgr, setState, batState, ICommand } from "./command.js";
 enum CType {
+    /** 熵值的变化 */
     entropy,
+    /** 瓦片对象(图片)的变化 */
     tile,
+    /** 选中状态的变化 */
     state,
 }
-type wfcCommand = { [pos: number]: { ctype: CType, value: number } };
-
+type wfcCommand = { pos: number, ctype: CType, value: number };
+let greyImgUrl = `../../../../res/info/grey.png`;
 //temp map data
 let mapTemp = [[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
 [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1],
@@ -60,6 +63,45 @@ function setText(own: HTMLElement, testColor: string, className: string, type: n
         default: let a;
     }
     own.appendChild(subfont);
+}
+
+//瓦片 图片切换 命令
+// tslint:disable-next-line: class-name
+class commandTileImg implements ICommand {
+    constructor(tile: HTMLImageElement, targetSrc: string, transform: string) {
+        this.tile = tile;
+        this.targetSrc = targetSrc;
+        this.tarTransform = transform;
+        this.lastSrc = this.tile.src;
+        this.lastTransform = this.tile.style.transform;
+        this.tile = tile;
+    }
+    private targetSrc: string;
+    private tarTransform: string;
+    private lastTransform: string;
+    private lastSrc: string;
+    private tile: HTMLImageElement;
+
+    public execute() {
+        this.tile.src = this.targetSrc;
+        this.tile.style.transform = this.tarTransform;
+    }
+    public undo() {
+        this.tile.src = this.lastSrc;
+        this.tile.style.transform = this.lastTransform;
+    }
+}
+
+//瓦片 颜色修改 命令
+// tslint:disable-next-line: class-name
+class commandTileColor implements ICommand {
+    public execute() {
+        throw new Error("Method not implemented.");
+    }
+    public undo() {
+        throw new Error("Method not implemented.");
+    }
+
 }
 
 export class Main {
@@ -246,25 +288,32 @@ export class Main {
         // let jsonStr = await loadJson(`${this.resPath}${this.smpleName}/data.json`);
         // data = JSON.parse(jsonStr);
         data = _data;
-
+        //瓦片 img 信息
+        let tileImgRotates: [string, number][] = [];
+        for (let key in data.tiles) {
+            let _rTypes: number[] = data.tiles[key][2];
+            let arr = [0].concat(_rTypes);
+            arr.forEach((v) => {
+                tileImgRotates.push([key, v]);
+            });
+        }
         // debugger;
         let wfc = new WFC.WFC2D(data);
 
         let proccessData: wfcCommand[] = [];
         WFC["onProcess"] = (pos: number, ctype: number, value: number) => {
-            let _d = {};
-            _d[pos] = { ctype, value };
-            proccessData.push(_d);
+            proccessData.push({ pos, ctype, value });
         };
 
         // let wfcResult = wfc.collapseSync(this.mapSize, this.mapSize);
         let wfcResult = await wfc.collapse(this.mapSize, this.mapSize);
-        debugger;
 
         //地图筛选
         // this.AS.outFilter = (x, y) => {
         //     return mapTemp[y][x] != null && mapTemp[y][x] == 0;
         // };
+
+        let imgEleArr: HTMLImageElement[] = [];
         let imgs = this.tileViewObj.currTilePackage.imgs;
         let imgBas64 = {};
         for (let key in imgs) {
@@ -291,12 +340,49 @@ export class Main {
                 // let texturePath = `${this.resPath}${this.smpleName}/${resN}.png`;
                 // let texturePath = `${this.resPath}${this.smpleName}/${resN}.png`;
                 let texturePath = imgBas64[resN];
-                this.genCell(li, x, y, rotate, texturePath);
+                // this.genCell(li, x, y, rotate, texturePath);
+                let imgEle = document.createElement("img");
+                imgEle.src = greyImgUrl;
+                // imgEle.style.transform = `rotate(${rotate * 90}deg)`;
+                imgEleArr.push(imgEle);
+                this.genCell(li, x, y, imgEle);
             }
         }
+
+        let commandArr: ICommand[] = [];
+        for (let i = 0, len = proccessData.length; i < len; i++) {
+            let pV = proccessData[i];
+            if (pV.value == -1) { debugger; }
+            let _com: ICommand;
+            switch (pV.ctype) {
+                case CType.tile:
+                    let imgSrc = greyImgUrl;
+                    let rtype = 0;
+                    if (pV.value != -1) {
+                        let temp = tileImgRotates[pV.value];
+                        imgSrc = imgBas64[temp[0]];
+                        rtype = temp[1];
+                    }
+                    _com = new commandTileImg(imgEleArr[pV.pos], imgSrc, `rotate(${rtype * 90}deg)`);
+                    break;
+                case CType.entropy:
+                    break;
+                case CType.state:
+                    break;
+                default:
+            }
+            if (_com) {
+                commandArr.push(_com);
+            }
+        }
+
+        for (let i = 0, len = commandArr.length; i < len; i++) {
+            CommandMgr.Instance.execute(commandArr[i]);
+        }
+
     }
 
-    private genCell(li: HTMLElement, x: number, y: number, rotateType: number, resPath: string) {
+    private genCell(li: HTMLElement, x: number, y: number, imgEle: HTMLImageElement) {
         let subDiv = document.createElement("div");
         subDiv.style.position = "relative";
         subDiv.style.width = `${this.size}px`;
@@ -307,12 +393,12 @@ export class Main {
         li.appendChild(subDiv);
 
         //--------test add img-----------
-        let _img = document.createElement("img");
-        // _img.src = `./res/10${Math.floor(Math.random() * 3) + 1}.png`;
-        _img.src = `${resPath}`;
+        // let _img = document.createElement("img");
+        // // _img.src = `./res/10${Math.floor(Math.random() * 3) + 1}.png`;
+        // _img.src = `${resPath}`;
+        let _img = imgEle;
         _img.style.width = `${this.size}px`;
         _img.style.height = `${this.size}px`;
-        _img.style.transform = `rotate(${rotateType * 90}deg)`;
         subDiv.appendChild(_img);
         //-------------------------------
 

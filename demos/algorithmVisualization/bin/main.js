@@ -36,7 +36,7 @@ System.register(["./command.js"], function (exports_1, context_1) {
             if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
         }
     };
-    var command_js_1, CType, mapTemp, Main;
+    var command_js_1, CType, greyImgUrl, mapTemp, commandTileImg, commandTileColor, Main;
     var __moduleName = context_1 && context_1.id;
     function loadJson(path) {
         return new Promise(function (resolve, reject) {
@@ -93,6 +93,7 @@ System.register(["./command.js"], function (exports_1, context_1) {
                 CType[CType["tile"] = 1] = "tile";
                 CType[CType["state"] = 2] = "state";
             })(CType || (CType = {}));
+            greyImgUrl = "../../../../res/info/grey.png";
             mapTemp = [[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
                 [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1],
                 [1, 0, 1, 0, 0, 0, 1, 0, 0, 1, 1, 1, 0, 0, 1],
@@ -108,6 +109,36 @@ System.register(["./command.js"], function (exports_1, context_1) {
                 [1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1],
                 [1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1],
                 [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]];
+            commandTileImg = (function () {
+                function commandTileImg(tile, targetSrc, transform) {
+                    this.tile = tile;
+                    this.targetSrc = targetSrc;
+                    this.tarTransform = transform;
+                    this.lastSrc = this.tile.src;
+                    this.lastTransform = this.tile.style.transform;
+                    this.tile = tile;
+                }
+                commandTileImg.prototype.execute = function () {
+                    this.tile.src = this.targetSrc;
+                    this.tile.style.transform = this.tarTransform;
+                };
+                commandTileImg.prototype.undo = function () {
+                    this.tile.src = this.lastSrc;
+                    this.tile.style.transform = this.lastTransform;
+                };
+                return commandTileImg;
+            }());
+            commandTileColor = (function () {
+                function commandTileColor() {
+                }
+                commandTileColor.prototype.execute = function () {
+                    throw new Error("Method not implemented.");
+                };
+                commandTileColor.prototype.undo = function () {
+                    throw new Error("Method not implemented.");
+                };
+                return commandTileColor;
+            }());
             Main = (function () {
                 function Main() {
                     this.resPath = "../../../../res/samples/";
@@ -280,23 +311,32 @@ System.register(["./command.js"], function (exports_1, context_1) {
                 };
                 Main.prototype.toGenerateMap = function (_data) {
                     return __awaiter(this, void 0, void 0, function () {
-                        var data, wfc, proccessData, wfcResult, imgs, imgBas64, key, val, baseName, y, li, x, imgName, rotate, resN, texturePath;
+                        var data, tileImgRotates, _loop_1, key, wfc, proccessData, wfcResult, imgEleArr, imgs, imgBas64, key, val, baseName, y, li, x, imgName, rotate, resN, texturePath, imgEle, commandArr, i, len, pV, _com, imgSrc, rtype, temp, i, len;
                         var _a;
                         return __generator(this, function (_b) {
                             switch (_b.label) {
                                 case 0:
                                     data = _data;
+                                    tileImgRotates = [];
+                                    _loop_1 = function (key) {
+                                        var _rTypes = data.tiles[key][2];
+                                        var arr = [0].concat(_rTypes);
+                                        arr.forEach(function (v) {
+                                            tileImgRotates.push([key, v]);
+                                        });
+                                    };
+                                    for (key in data.tiles) {
+                                        _loop_1(key);
+                                    }
                                     wfc = new WFC.WFC2D(data);
                                     proccessData = [];
                                     WFC["onProcess"] = function (pos, ctype, value) {
-                                        var _d = {};
-                                        _d[pos] = { ctype: ctype, value: value };
-                                        proccessData.push(_d);
+                                        proccessData.push({ pos: pos, ctype: ctype, value: value });
                                     };
                                     return [4, wfc.collapse(this.mapSize, this.mapSize)];
                                 case 1:
                                     wfcResult = _b.sent();
-                                    debugger;
+                                    imgEleArr = [];
                                     imgs = this.tileViewObj.currTilePackage.imgs;
                                     imgBas64 = {};
                                     for (key in imgs) {
@@ -319,15 +359,49 @@ System.register(["./command.js"], function (exports_1, context_1) {
                                             _a = wfcResult.shift(), imgName = _a[0], rotate = _a[1];
                                             resN = imgName;
                                             texturePath = imgBas64[resN];
-                                            this.genCell(li, x, y, rotate, texturePath);
+                                            imgEle = document.createElement("img");
+                                            imgEle.src = greyImgUrl;
+                                            imgEleArr.push(imgEle);
+                                            this.genCell(li, x, y, imgEle);
                                         }
+                                    }
+                                    commandArr = [];
+                                    for (i = 0, len = proccessData.length; i < len; i++) {
+                                        pV = proccessData[i];
+                                        if (pV.value == -1) {
+                                            debugger;
+                                        }
+                                        _com = void 0;
+                                        switch (pV.ctype) {
+                                            case CType.tile:
+                                                imgSrc = greyImgUrl;
+                                                rtype = 0;
+                                                if (pV.value != -1) {
+                                                    temp = tileImgRotates[pV.value];
+                                                    imgSrc = imgBas64[temp[0]];
+                                                    rtype = temp[1];
+                                                }
+                                                _com = new commandTileImg(imgEleArr[pV.pos], imgSrc, "rotate(" + rtype * 90 + "deg)");
+                                                break;
+                                            case CType.entropy:
+                                                break;
+                                            case CType.state:
+                                                break;
+                                            default:
+                                        }
+                                        if (_com) {
+                                            commandArr.push(_com);
+                                        }
+                                    }
+                                    for (i = 0, len = commandArr.length; i < len; i++) {
+                                        command_js_1.CommandMgr.Instance.execute(commandArr[i]);
                                     }
                                     return [2];
                             }
                         });
                     });
                 };
-                Main.prototype.genCell = function (li, x, y, rotateType, resPath) {
+                Main.prototype.genCell = function (li, x, y, imgEle) {
                     var subDiv = document.createElement("div");
                     subDiv.style.position = "relative";
                     subDiv.style.width = this.size + "px";
@@ -335,11 +409,9 @@ System.register(["./command.js"], function (exports_1, context_1) {
                     subDiv.style.left = x * this.gap + "px";
                     subDiv.style.background = mapTemp[y][x] == 0 ? this.color0 : this.color1;
                     li.appendChild(subDiv);
-                    var _img = document.createElement("img");
-                    _img.src = "" + resPath;
+                    var _img = imgEle;
                     _img.style.width = this.size + "px";
                     _img.style.height = this.size + "px";
-                    _img.style.transform = "rotate(" + rotateType * 90 + "deg)";
                     subDiv.appendChild(_img);
                     setText(subDiv, "#ffff00", "class_f", 0);
                     setText(subDiv, "#00ff00", "class_g", 1);
