@@ -368,9 +368,6 @@ System.register(["./command.js"], function (exports_1, context_1) {
                                     commandArr = [];
                                     for (i = 0, len = proccessData.length; i < len; i++) {
                                         pV = proccessData[i];
-                                        if (pV.value == -1) {
-                                            debugger;
-                                        }
                                         _com = void 0;
                                         switch (pV.ctype) {
                                             case CType.tile:
@@ -413,9 +410,6 @@ System.register(["./command.js"], function (exports_1, context_1) {
                     _img.style.width = this.size + "px";
                     _img.style.height = this.size + "px";
                     subDiv.appendChild(_img);
-                    setText(subDiv, "#ffff00", "class_f", 0);
-                    setText(subDiv, "#00ff00", "class_g", 1);
-                    setText(subDiv, "#ff0000", "class_h", 2);
                     this.DivMap[x + "_" + y] = subDiv;
                     subDiv["pos"] = { x: x, y: y };
                 };

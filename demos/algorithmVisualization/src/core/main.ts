@@ -352,7 +352,6 @@ export class Main {
         let commandArr: ICommand[] = [];
         for (let i = 0, len = proccessData.length; i < len; i++) {
             let pV = proccessData[i];
-            if (pV.value == -1) { debugger; }
             let _com: ICommand;
             switch (pV.ctype) {
                 case CType.tile:
@@ -402,9 +401,9 @@ export class Main {
         subDiv.appendChild(_img);
         //-------------------------------
 
-        setText(subDiv, `#ffff00`, `class_f`, 0);
-        setText(subDiv, `#00ff00`, `class_g`, 1);
-        setText(subDiv, `#ff0000`, `class_h`, 2);
+        // setText(subDiv, `#ffff00`, `class_f`, 0);
+        // setText(subDiv, `#00ff00`, `class_g`, 1);
+        // setText(subDiv, `#ff0000`, `class_h`, 2);
 
         this.DivMap[`${x}_${y}`] = subDiv;
         subDiv["pos"] = { x, y };
