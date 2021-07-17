@@ -1,4 +1,4 @@
-import { CommandMgr, setState, batState, ICommand } from "./command.js";
+import { CommandMgr, setState, batState, ICommand, BatchCommand } from "./command.js";
 enum CType {
     /** 熵值的变化 */
     entropy,
@@ -7,24 +7,12 @@ enum CType {
     /** 选中状态的变化 */
     state,
 }
+
 type wfcCommand = { pos: number, ctype: CType, value: number };
+let tileSize = 40;
+let tileGap = 0;
+let mapSize = 10;
 let greyImgUrl = `../../../../res/info/grey.png`;
-//temp map data
-let mapTemp = [[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-[1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1],
-[1, 0, 1, 0, 0, 0, 1, 0, 0, 1, 1, 1, 0, 0, 1],
-[1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1],
-[1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1],
-[1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1],
-[1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1],
-[1, 0, 0, 1, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 1],
-[1, 0, 0, 0, 0, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1],
-[1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1],
-[1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 1],
-[1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1],
-[1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1],
-[1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1],
-[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]];
 
 //加载json 文件
 // tslint:disable-next-line: only-arrow-functions
@@ -65,6 +53,22 @@ function setText(own: HTMLElement, testColor: string, className: string, type: n
     own.appendChild(subfont);
 }
 
+/** 设置 聚焦 */
+// tslint:disable-next-line: only-arrow-functions
+function setFocus(imgEle: HTMLImageElement, isSelect: boolean) {
+    if (!imgEle) { return; }
+    if (isSelect) {
+        let _d = 2;
+        imgEle.style.width = `${tileSize - _d * 2}px`;
+        imgEle.style.height = `${tileSize - _d * 2}px`;
+        imgEle.style.border = `${_d}px solid DodgerBlue`;
+    } else {
+        imgEle.style.width = `${tileSize}px`;
+        imgEle.style.height = `${tileSize}px`;
+        imgEle.style.border = "";
+    }
+}
+
 //瓦片 图片切换 命令
 // tslint:disable-next-line: class-name
 class commandTileImg implements ICommand {
@@ -92,14 +96,73 @@ class commandTileImg implements ICommand {
     }
 }
 
-//瓦片 颜色修改 命令
+//瓦片 亮度 命令
 // tslint:disable-next-line: class-name
-class commandTileColor implements ICommand {
+class commandTileLum implements ICommand {
+    constructor(tile: HTMLImageElement, lum: number) {
+        this.tile = tile;
+        this.tarParent = tile.parentElement;
+        this.tarColor = this.getColorByLum(lum);
+
+        if (!this.tarParent.style.background) {
+            this.tarParent.style.background = this.getColorByLum(0);
+        }
+        this.lastColor = this.tarParent.style.background;
+    }
+
+    private tarParent: HTMLElement;
+    private tile: HTMLImageElement;
+    private tarColor: string;
+    private lastColor: string;
     public execute() {
-        throw new Error("Method not implemented.");
+        this.tarParent.style.background = this.tarColor;
+        this.tile.style["mix-blend-mode"] = this.getBlendByColor(this.tarColor);
     }
     public undo() {
-        throw new Error("Method not implemented.");
+        this.tarParent.style.background = this.lastColor;
+        this.tile.style["mix-blend-mode"] = this.getBlendByColor(this.lastColor);
+    }
+
+    private getColorByLum(lum: number) {
+        return `rgb(${lum * 255} ${lum * 255} ${lum * 255})`;
+    }
+
+    private getBlendByColor(color: string) {
+        return color == `rgb(0 0 0)` ? "" : "soft-light";
+    }
+}
+
+//瓦片 聚焦 命令
+// tslint:disable-next-line: class-name
+class commandTileFocus implements ICommand {
+    public static lastFocu: HTMLImageElement;
+    constructor(tile: HTMLImageElement) {
+        this.tarTile = tile;
+    }
+    private tarTile: HTMLImageElement;
+    private lastTile: HTMLImageElement;
+    private inited = false;
+    public execute() {
+        if (!this.inited) {
+            this.lastTile = commandTileFocus.lastFocu;
+            this.inited = true;
+        }
+        if (this.tarTile) {
+            setFocus(this.tarTile, true);
+        }
+        if (this.lastTile) {
+            setFocus(this.lastTile, false);
+        }
+        //set lastFocus;
+        commandTileFocus.lastFocu = this.tarTile;
+    }
+    public undo() {
+        if (this.lastTile) {
+            setFocus(this.lastTile, true);
+        }
+        if (this.tarTile) {
+            setFocus(this.tarTile, false);
+        }
     }
 
 }
@@ -135,9 +198,7 @@ export class Main {
 
     private color0 = "#dddddd";
     private color1 = "#555555";
-    private mapSize = mapTemp.length;
-    private size = 40;
-    private gap = 1;
+    // private mapSize = mapTemp.length;
 
     private lastTime = -1;
     private playSpeed = 1;  // /s
@@ -305,8 +366,8 @@ export class Main {
             proccessData.push({ pos, ctype, value });
         };
 
-        // let wfcResult = wfc.collapseSync(this.mapSize, this.mapSize);
-        let wfcResult = await wfc.collapse(this.mapSize, this.mapSize);
+        // let wfcResult = wfc.collapseSync(mapSize, mapSize);
+        let wfcResult = await wfc.collapse(mapSize, mapSize);
 
         //地图筛选
         // this.AS.outFilter = (x, y) => {
@@ -321,17 +382,17 @@ export class Main {
             let baseName = `${val.fileName.slice(0, val.fileName.length - 4)}`;
             imgBas64[baseName] = val.dataB64;
         }
-        this.rootContain.style.width = this.rootContain.style.height = `${this.mapSize * (this.size + this.gap) - this.gap}px`;
-        for (let y = 0; y < this.mapSize; y++) {
+        this.rootContain.style.width = this.rootContain.style.height = `${mapSize * (tileSize + tileGap) - tileGap}px`;
+        for (let y = 0; y < mapSize; y++) {
             //if(y!=0 )continue;
             let li = document.createElement(`li`);
             li.style.display = `flex`;
             li.style.position = `relative`;
-            li.style.height = `${this.size}px`;
+            li.style.height = `${tileSize}px`;
             li.style.width = this.rootContain.style.width;
-            li.style.top = `${y * this.gap}px`;
+            li.style.top = `${y * tileGap}px`;
             this.rootContain.appendChild(li);
-            for (let x = 0; x < this.mapSize; x++) {
+            for (let x = 0; x < mapSize; x++) {
                 let imgName: string;
                 let rotate: number;
                 [imgName, rotate] = wfcResult.shift();
@@ -352,7 +413,6 @@ export class Main {
         let commandArr: ICommand[] = [];
         for (let i = 0, len = proccessData.length; i < len; i++) {
             let pV = proccessData[i];
-            let _com: ICommand;
             switch (pV.ctype) {
                 case CType.tile:
                     let imgSrc = greyImgUrl;
@@ -362,33 +422,48 @@ export class Main {
                         imgSrc = imgBas64[temp[0]];
                         rtype = temp[1];
                     }
-                    _com = new commandTileImg(imgEleArr[pV.pos], imgSrc, `rotate(${rtype * 90}deg)`);
+                    commandArr.push(new commandTileFocus(imgEleArr[pV.pos]));
+                    let comBat = new BatchCommand();
+                    comBat.addComd(new commandTileImg(imgEleArr[pV.pos], imgSrc, `rotate(${rtype * 90}deg)`));
+                    comBat.addComd(new commandTileLum(imgEleArr[pV.pos], 0));
+                    commandArr.push(comBat);
+                    // commandArr.push(new commandTileImg(imgEleArr[pV.pos], imgSrc, `rotate(${rtype * 90}deg)`));
+                    // commandArr.push(new commandTileLum(imgEleArr[pV.pos], 0));
                     break;
                 case CType.entropy:
+                    commandArr.push(new commandTileFocus(imgEleArr[pV.pos]));
+                    commandArr.push(new commandTileLum(imgEleArr[pV.pos], pV.value));
                     break;
                 case CType.state:
                     break;
                 default:
             }
-            if (_com) {
-                commandArr.push(_com);
-            }
+        }
+
+        //最后一个的选中状态处理
+        if (proccessData.length > 0) {
+            commandArr.push(new commandTileFocus(null));
         }
 
         for (let i = 0, len = commandArr.length; i < len; i++) {
             CommandMgr.Instance.execute(commandArr[i]);
         }
 
+        //开始 播放
+        this.commandsMoveByPercent(0); //goBack to frist location
+        this.autoPlay(); //start play of process
+
     }
 
     private genCell(li: HTMLElement, x: number, y: number, imgEle: HTMLImageElement) {
         let subDiv = document.createElement("div");
         subDiv.style.position = "relative";
-        subDiv.style.width = `${this.size}px`;
-        subDiv.style.height = `${this.size}px`;
-        subDiv.style.left = `${x * this.gap}px`;
-        //subDiv.style.top = `${y * this.gap}px`;
-        subDiv.style.background = mapTemp[y][x] == 0 ? this.color0 : this.color1;
+        subDiv.style.width = `${tileSize}px`;
+        subDiv.style.height = `${tileSize}px`;
+        subDiv.style.left = `${x * tileGap}px`;
+        //subDiv.style.top = `${y * gap}px`;
+        // subDiv.style.background = mapTemp[y][x] == 0 ? this.color0 : this.color1;
+        subDiv.style.background = this.color0;
         li.appendChild(subDiv);
 
         //--------test add img-----------
@@ -396,8 +471,8 @@ export class Main {
         // // _img.src = `./res/10${Math.floor(Math.random() * 3) + 1}.png`;
         // _img.src = `${resPath}`;
         let _img = imgEle;
-        _img.style.width = `${this.size}px`;
-        _img.style.height = `${this.size}px`;
+        _img.style.width = `${tileSize}px`;
+        _img.style.height = `${tileSize}px`;
         subDiv.appendChild(_img);
         //-------------------------------
 

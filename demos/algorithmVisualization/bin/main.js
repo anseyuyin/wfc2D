@@ -36,7 +36,7 @@ System.register(["./command.js"], function (exports_1, context_1) {
             if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
         }
     };
-    var command_js_1, CType, greyImgUrl, mapTemp, commandTileImg, commandTileColor, Main;
+    var command_js_1, CType, tileSize, tileGap, mapSize, greyImgUrl, commandTileImg, commandTileLum, commandTileFocus, Main;
     var __moduleName = context_1 && context_1.id;
     function loadJson(path) {
         return new Promise(function (resolve, reject) {
@@ -81,6 +81,22 @@ System.register(["./command.js"], function (exports_1, context_1) {
         }
         own.appendChild(subfont);
     }
+    function setFocus(imgEle, isSelect) {
+        if (!imgEle) {
+            return;
+        }
+        if (isSelect) {
+            var _d = 2;
+            imgEle.style.width = tileSize - _d * 2 + "px";
+            imgEle.style.height = tileSize - _d * 2 + "px";
+            imgEle.style.border = _d + "px solid DodgerBlue";
+        }
+        else {
+            imgEle.style.width = tileSize + "px";
+            imgEle.style.height = tileSize + "px";
+            imgEle.style.border = "";
+        }
+    }
     return {
         setters: [
             function (command_js_1_1) {
@@ -93,22 +109,10 @@ System.register(["./command.js"], function (exports_1, context_1) {
                 CType[CType["tile"] = 1] = "tile";
                 CType[CType["state"] = 2] = "state";
             })(CType || (CType = {}));
+            tileSize = 40;
+            tileGap = 0;
+            mapSize = 10;
             greyImgUrl = "../../../../res/info/grey.png";
-            mapTemp = [[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-                [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1],
-                [1, 0, 1, 0, 0, 0, 1, 0, 0, 1, 1, 1, 0, 0, 1],
-                [1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1],
-                [1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1],
-                [1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1],
-                [1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1],
-                [1, 0, 0, 1, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 1],
-                [1, 0, 0, 0, 0, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1],
-                [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1],
-                [1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 1],
-                [1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1],
-                [1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1],
-                [1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1],
-                [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]];
             commandTileImg = (function () {
                 function commandTileImg(tile, targetSrc, transform) {
                     this.tile = tile;
@@ -128,16 +132,59 @@ System.register(["./command.js"], function (exports_1, context_1) {
                 };
                 return commandTileImg;
             }());
-            commandTileColor = (function () {
-                function commandTileColor() {
+            commandTileLum = (function () {
+                function commandTileLum(tile, lum) {
+                    this.tile = tile;
+                    this.tarParent = tile.parentElement;
+                    this.tarColor = this.getColorByLum(lum);
+                    if (!this.tarParent.style.background) {
+                        this.tarParent.style.background = this.getColorByLum(0);
+                    }
+                    this.lastColor = this.tarParent.style.background;
                 }
-                commandTileColor.prototype.execute = function () {
-                    throw new Error("Method not implemented.");
+                commandTileLum.prototype.execute = function () {
+                    this.tarParent.style.background = this.tarColor;
+                    this.tile.style["mix-blend-mode"] = this.getBlendByColor(this.tarColor);
                 };
-                commandTileColor.prototype.undo = function () {
-                    throw new Error("Method not implemented.");
+                commandTileLum.prototype.undo = function () {
+                    this.tarParent.style.background = this.lastColor;
+                    this.tile.style["mix-blend-mode"] = this.getBlendByColor(this.lastColor);
                 };
-                return commandTileColor;
+                commandTileLum.prototype.getColorByLum = function (lum) {
+                    return "rgb(" + lum * 255 + " " + lum * 255 + " " + lum * 255 + ")";
+                };
+                commandTileLum.prototype.getBlendByColor = function (color) {
+                    return color == "rgb(0 0 0)" ? "" : "soft-light";
+                };
+                return commandTileLum;
+            }());
+            commandTileFocus = (function () {
+                function commandTileFocus(tile) {
+                    this.inited = false;
+                    this.tarTile = tile;
+                }
+                commandTileFocus.prototype.execute = function () {
+                    if (!this.inited) {
+                        this.lastTile = commandTileFocus.lastFocu;
+                        this.inited = true;
+                    }
+                    if (this.tarTile) {
+                        setFocus(this.tarTile, true);
+                    }
+                    if (this.lastTile) {
+                        setFocus(this.lastTile, false);
+                    }
+                    commandTileFocus.lastFocu = this.tarTile;
+                };
+                commandTileFocus.prototype.undo = function () {
+                    if (this.lastTile) {
+                        setFocus(this.lastTile, true);
+                    }
+                    if (this.tarTile) {
+                        setFocus(this.tarTile, false);
+                    }
+                };
+                return commandTileFocus;
             }());
             Main = (function () {
                 function Main() {
@@ -158,9 +205,6 @@ System.register(["./command.js"], function (exports_1, context_1) {
                     this.colorMinSelect = "#77aa77";
                     this.color0 = "#dddddd";
                     this.color1 = "#555555";
-                    this.mapSize = mapTemp.length;
-                    this.size = 40;
-                    this.gap = 1;
                     this.lastTime = -1;
                     this.playSpeed = 1;
                     this.progressNum = 0;
@@ -311,7 +355,7 @@ System.register(["./command.js"], function (exports_1, context_1) {
                 };
                 Main.prototype.toGenerateMap = function (_data) {
                     return __awaiter(this, void 0, void 0, function () {
-                        var data, tileImgRotates, _loop_1, key, wfc, proccessData, wfcResult, imgEleArr, imgs, imgBas64, key, val, baseName, y, li, x, imgName, rotate, resN, texturePath, imgEle, commandArr, i, len, pV, _com, imgSrc, rtype, temp, i, len;
+                        var data, tileImgRotates, _loop_1, key, wfc, proccessData, wfcResult, imgEleArr, imgs, imgBas64, key, val, baseName, y, li, x, imgName, rotate, resN, texturePath, imgEle, commandArr, i, len, pV, imgSrc, rtype, temp, comBat, i, len;
                         var _a;
                         return __generator(this, function (_b) {
                             switch (_b.label) {
@@ -333,7 +377,7 @@ System.register(["./command.js"], function (exports_1, context_1) {
                                     WFC["onProcess"] = function (pos, ctype, value) {
                                         proccessData.push({ pos: pos, ctype: ctype, value: value });
                                     };
-                                    return [4, wfc.collapse(this.mapSize, this.mapSize)];
+                                    return [4, wfc.collapse(mapSize, mapSize)];
                                 case 1:
                                     wfcResult = _b.sent();
                                     imgEleArr = [];
@@ -344,16 +388,16 @@ System.register(["./command.js"], function (exports_1, context_1) {
                                         baseName = "" + val.fileName.slice(0, val.fileName.length - 4);
                                         imgBas64[baseName] = val.dataB64;
                                     }
-                                    this.rootContain.style.width = this.rootContain.style.height = this.mapSize * (this.size + this.gap) - this.gap + "px";
-                                    for (y = 0; y < this.mapSize; y++) {
+                                    this.rootContain.style.width = this.rootContain.style.height = mapSize * (tileSize + tileGap) - tileGap + "px";
+                                    for (y = 0; y < mapSize; y++) {
                                         li = document.createElement("li");
                                         li.style.display = "flex";
                                         li.style.position = "relative";
-                                        li.style.height = this.size + "px";
+                                        li.style.height = tileSize + "px";
                                         li.style.width = this.rootContain.style.width;
-                                        li.style.top = y * this.gap + "px";
+                                        li.style.top = y * tileGap + "px";
                                         this.rootContain.appendChild(li);
-                                        for (x = 0; x < this.mapSize; x++) {
+                                        for (x = 0; x < mapSize; x++) {
                                             imgName = void 0;
                                             rotate = void 0;
                                             _a = wfcResult.shift(), imgName = _a[0], rotate = _a[1];
@@ -368,7 +412,6 @@ System.register(["./command.js"], function (exports_1, context_1) {
                                     commandArr = [];
                                     for (i = 0, len = proccessData.length; i < len; i++) {
                                         pV = proccessData[i];
-                                        _com = void 0;
                                         switch (pV.ctype) {
                                             case CType.tile:
                                                 imgSrc = greyImgUrl;
@@ -378,21 +421,29 @@ System.register(["./command.js"], function (exports_1, context_1) {
                                                     imgSrc = imgBas64[temp[0]];
                                                     rtype = temp[1];
                                                 }
-                                                _com = new commandTileImg(imgEleArr[pV.pos], imgSrc, "rotate(" + rtype * 90 + "deg)");
+                                                commandArr.push(new commandTileFocus(imgEleArr[pV.pos]));
+                                                comBat = new command_js_1.BatchCommand();
+                                                comBat.addComd(new commandTileImg(imgEleArr[pV.pos], imgSrc, "rotate(" + rtype * 90 + "deg)"));
+                                                comBat.addComd(new commandTileLum(imgEleArr[pV.pos], 0));
+                                                commandArr.push(comBat);
                                                 break;
                                             case CType.entropy:
+                                                commandArr.push(new commandTileFocus(imgEleArr[pV.pos]));
+                                                commandArr.push(new commandTileLum(imgEleArr[pV.pos], pV.value));
                                                 break;
                                             case CType.state:
                                                 break;
                                             default:
                                         }
-                                        if (_com) {
-                                            commandArr.push(_com);
-                                        }
+                                    }
+                                    if (proccessData.length > 0) {
+                                        commandArr.push(new commandTileFocus(null));
                                     }
                                     for (i = 0, len = commandArr.length; i < len; i++) {
                                         command_js_1.CommandMgr.Instance.execute(commandArr[i]);
                                     }
+                                    this.commandsMoveByPercent(0);
+                                    this.autoPlay();
                                     return [2];
                             }
                         });
@@ -401,14 +452,14 @@ System.register(["./command.js"], function (exports_1, context_1) {
                 Main.prototype.genCell = function (li, x, y, imgEle) {
                     var subDiv = document.createElement("div");
                     subDiv.style.position = "relative";
-                    subDiv.style.width = this.size + "px";
-                    subDiv.style.height = this.size + "px";
-                    subDiv.style.left = x * this.gap + "px";
-                    subDiv.style.background = mapTemp[y][x] == 0 ? this.color0 : this.color1;
+                    subDiv.style.width = tileSize + "px";
+                    subDiv.style.height = tileSize + "px";
+                    subDiv.style.left = x * tileGap + "px";
+                    subDiv.style.background = this.color0;
                     li.appendChild(subDiv);
                     var _img = imgEle;
-                    _img.style.width = this.size + "px";
-                    _img.style.height = this.size + "px";
+                    _img.style.width = tileSize + "px";
+                    _img.style.height = tileSize + "px";
                     subDiv.appendChild(_img);
                     this.DivMap[x + "_" + y] = subDiv;
                     subDiv["pos"] = { x: x, y: y };

@@ -1,6 +1,7 @@
 var WFC;
 (function (WFC) {
     var mapW = 0;
+    var MaxEntropy = 0;
     var getPosId = (pos) => {
         return (pos.y * mapW) + pos.x;
     }
@@ -202,6 +203,9 @@ var WFC;
                 }
                 filterMap[_n._guid] = true;
                 var pass = _n.smallerSelf();
+                //-------------------- 尝试熵减
+                WFC.onProcess(getPosId(_n.position), 0, _n.getEntropy() / MaxEntropy);
+                //----------------------------
                 if (!pass) {
                     return false;
                 }
@@ -250,7 +254,6 @@ var WFC;
                 }
                 _e += _m.entropy;
             }
-            _e *= -1;
             this._entropy = _e;
         };
         Slot.prototype.getCloseEdgeIdx = function (neighbor) {
@@ -378,7 +381,10 @@ var WFC;
                 var _m = this.modelMap[key];
                 _m.probability = _m.probability / totalWeight;
                 var p = _m.probability;
-                _m.entropy = p * Math.log2(p);
+                _m.entropy = -p * Math.log2(p);
+                //-------------
+                MaxEntropy += _m.entropy
+                //--------------
             }
         }
         WFC2D.prototype.collapseSync = function (width, height, backOffMaxNum, capQueueMaxLen, capRate) {
@@ -604,7 +610,7 @@ var WFC;
 
                 //---- select collapseNow tile
                 let mCurr = v.models.length > 1 ? -1 : v.models[0];
-                if(mCurr != m){
+                if (mCurr != m) {
                     WFC.onProcess(getPosId(v.position), 1, mCurr);
                 }
                 //----

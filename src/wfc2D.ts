@@ -292,7 +292,7 @@ namespace WFC {
                 //entropy
                 _e += _m.entropy;
             }
-            _e *= -1;
+            // _e *= -1;
             this._entropy = _e;
         }
 
@@ -448,7 +448,7 @@ namespace WFC {
                 //calculate Entropy
                 //i...n
                 //H = -sum(pi * Log2pi + .... pn * Log2pn);
-                _m.entropy = p * Math.log2(p);
+                _m.entropy = -p * Math.log2(p);
             }
         }
         /** id list of models */

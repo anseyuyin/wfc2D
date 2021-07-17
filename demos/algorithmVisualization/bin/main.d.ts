@@ -19,9 +19,6 @@ export declare class Main {
     private colorMinSelect;
     private color0;
     private color1;
-    private mapSize;
-    private size;
-    private gap;
     private lastTime;
     private playSpeed;
     private progressNum;
