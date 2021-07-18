@@ -55,19 +55,20 @@ System.register(["./command.js"], function (exports_1, context_1) {
             };
         });
     }
-    function setText(own, testColor, className, type) {
+    function setText(own, testColor, type, className) {
+        if (type === void 0) { type = 0; }
+        if (className === void 0) { className = ""; }
         var subfont = document.createElement("font");
         subfont.style.position = "absolute";
         subfont.style.color = testColor;
-        subfont.size = "0.3";
-        subfont.textContent = "-1";
-        subfont.style.display = "none";
+        subfont.size = "1";
+        subfont.textContent = "1.00";
         subfont.className = className;
         switch (type) {
             case 0:
                 subfont.style.right = "50%";
                 subfont.style.top = "0px";
-                subfont.size = "0.5";
+                subfont.size = "3";
                 break;
             case 1:
                 subfont.style.left = "0px";
@@ -80,6 +81,7 @@ System.register(["./command.js"], function (exports_1, context_1) {
             default: var a = void 0;
         }
         own.appendChild(subfont);
+        return subfont;
     }
     function setFocus(imgEle, isSelect) {
         if (!imgEle) {
@@ -89,7 +91,7 @@ System.register(["./command.js"], function (exports_1, context_1) {
             var _d = 2;
             imgEle.style.width = tileSize - _d * 2 + "px";
             imgEle.style.height = tileSize - _d * 2 + "px";
-            imgEle.style.border = _d + "px solid DodgerBlue";
+            imgEle.style.border = _d + "px solid #f5ff14";
         }
         else {
             imgEle.style.width = tileSize + "px";
@@ -109,9 +111,9 @@ System.register(["./command.js"], function (exports_1, context_1) {
                 CType[CType["tile"] = 1] = "tile";
                 CType[CType["state"] = 2] = "state";
             })(CType || (CType = {}));
-            tileSize = 40;
+            tileSize = 80;
             tileGap = 0;
-            mapSize = 10;
+            mapSize = 6;
             greyImgUrl = "../../../../res/info/grey.png";
             commandTileImg = (function () {
                 function commandTileImg(tile, targetSrc, transform) {
@@ -134,27 +136,41 @@ System.register(["./command.js"], function (exports_1, context_1) {
             }());
             commandTileLum = (function () {
                 function commandTileLum(tile, lum) {
+                    this.inited = false;
                     this.tile = tile;
                     this.tarParent = tile.parentElement;
+                    this.textEle = this.tarParent.children.item(0);
+                    this.tarEnt = lum.toFixed(2);
                     this.tarColor = this.getColorByLum(lum);
                     if (!this.tarParent.style.background) {
                         this.tarParent.style.background = this.getColorByLum(0);
                     }
-                    this.lastColor = this.tarParent.style.background;
                 }
                 commandTileLum.prototype.execute = function () {
+                    if (!this.inited) {
+                        this.lastColor = this.tarParent.style.background;
+                        this.lastEnt = this.textEle.textContent;
+                        this.inited = true;
+                    }
                     this.tarParent.style.background = this.tarColor;
                     this.tile.style["mix-blend-mode"] = this.getBlendByColor(this.tarColor);
+                    this.textEle.style.display = this.getDisplayByColor(this.tarColor);
+                    this.textEle.textContent = this.tarEnt;
                 };
                 commandTileLum.prototype.undo = function () {
                     this.tarParent.style.background = this.lastColor;
                     this.tile.style["mix-blend-mode"] = this.getBlendByColor(this.lastColor);
+                    this.textEle.style.display = this.getDisplayByColor(this.lastColor);
+                    this.textEle.textContent = this.lastEnt;
                 };
                 commandTileLum.prototype.getColorByLum = function (lum) {
                     return "rgb(" + lum * 255 + " " + lum * 255 + " " + lum * 255 + ")";
                 };
                 commandTileLum.prototype.getBlendByColor = function (color) {
                     return color == "rgb(0 0 0)" ? "" : "soft-light";
+                };
+                commandTileLum.prototype.getDisplayByColor = function (color) {
+                    return color == "rgb(0 0 0)" ? "none" : "";
                 };
                 return commandTileLum;
             }());
@@ -203,7 +219,7 @@ System.register(["./command.js"], function (exports_1, context_1) {
                     this.colorOpen = "#7777aa";
                     this.colorClose = "#aa7777";
                     this.colorMinSelect = "#77aa77";
-                    this.color0 = "#dddddd";
+                    this.color0 = "#ffffff";
                     this.color1 = "#555555";
                     this.lastTime = -1;
                     this.playSpeed = 1;
@@ -457,6 +473,7 @@ System.register(["./command.js"], function (exports_1, context_1) {
                     subDiv.style.left = x * tileGap + "px";
                     subDiv.style.background = this.color0;
                     li.appendChild(subDiv);
+                    setText(subDiv, "rgb(255 0 247)", 0);
                     var _img = imgEle;
                     _img.style.width = tileSize + "px";
                     _img.style.height = tileSize + "px";

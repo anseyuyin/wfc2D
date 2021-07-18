@@ -9,9 +9,9 @@ enum CType {
 }
 
 type wfcCommand = { pos: number, ctype: CType, value: number };
-let tileSize = 40;
+let tileSize = 80;
 let tileGap = 0;
-let mapSize = 10;
+let mapSize = 6;
 let greyImgUrl = `../../../../res/info/grey.png`;
 
 //加载json 文件
@@ -36,21 +36,22 @@ function loadJson(path: string): Promise<string> {
 
 // type:[0:top 1:bLeft 2:bRight]
 // tslint:disable-next-line: only-arrow-functions
-function setText(own: HTMLElement, testColor: string, className: string, type: number) {
+function setText(own: HTMLElement, testColor: string, type = 0, className = "") {
     let subfont = document.createElement(`font`);
     subfont.style.position = "absolute";
     subfont.style.color = testColor;
-    subfont.size = "0.3";
-    subfont.textContent = "-1";
-    subfont.style.display = "none";
+    subfont.size = "1";
+    subfont.textContent = "1.00";
+    // subfont.style.display = "none";
     subfont.className = className;
     switch (type) {
-        case 0: subfont.style.right = `50%`; subfont.style.top = `0px`; subfont.size = "0.5"; break;
+        case 0: subfont.style.right = `50%`; subfont.style.top = `0px`; subfont.size = "3"; break;
         case 1: subfont.style.left = `0px`; subfont.style.bottom = `0px`; break;
         case 2: subfont.style.right = `0px`; subfont.style.bottom = `0px`; break;
         default: let a;
     }
     own.appendChild(subfont);
+    return subfont;
 }
 
 /** 设置 聚焦 */
@@ -61,7 +62,7 @@ function setFocus(imgEle: HTMLImageElement, isSelect: boolean) {
         let _d = 2;
         imgEle.style.width = `${tileSize - _d * 2}px`;
         imgEle.style.height = `${tileSize - _d * 2}px`;
-        imgEle.style.border = `${_d}px solid DodgerBlue`;
+        imgEle.style.border = `${_d}px solid #f5ff14`;
     } else {
         imgEle.style.width = `${tileSize}px`;
         imgEle.style.height = `${tileSize}px`;
@@ -102,25 +103,39 @@ class commandTileLum implements ICommand {
     constructor(tile: HTMLImageElement, lum: number) {
         this.tile = tile;
         this.tarParent = tile.parentElement;
+        this.textEle = this.tarParent.children.item(0) as HTMLFontElement;
+        this.tarEnt = lum.toFixed(2);
         this.tarColor = this.getColorByLum(lum);
-
         if (!this.tarParent.style.background) {
             this.tarParent.style.background = this.getColorByLum(0);
         }
-        this.lastColor = this.tarParent.style.background;
     }
 
     private tarParent: HTMLElement;
     private tile: HTMLImageElement;
+    private textEle: HTMLFontElement;
     private tarColor: string;
     private lastColor: string;
+    private tarEnt: string;
+    private lastEnt: string;
+    private inited = false;
     public execute() {
+        if (!this.inited) {
+            this.lastColor = this.tarParent.style.background;
+            this.lastEnt = this.textEle.textContent;
+            this.inited = true;
+        }
         this.tarParent.style.background = this.tarColor;
         this.tile.style["mix-blend-mode"] = this.getBlendByColor(this.tarColor);
+        this.textEle.style.display = this.getDisplayByColor(this.tarColor);
+        this.textEle.textContent = this.tarEnt;
     }
+
     public undo() {
         this.tarParent.style.background = this.lastColor;
         this.tile.style["mix-blend-mode"] = this.getBlendByColor(this.lastColor);
+        this.textEle.style.display = this.getDisplayByColor(this.lastColor);
+        this.textEle.textContent = this.lastEnt;
     }
 
     private getColorByLum(lum: number) {
@@ -129,6 +144,10 @@ class commandTileLum implements ICommand {
 
     private getBlendByColor(color: string) {
         return color == `rgb(0 0 0)` ? "" : "soft-light";
+    }
+
+    private getDisplayByColor(color: string) {
+        return color == `rgb(0 0 0)` ? "none" : "";
     }
 }
 
@@ -196,7 +215,8 @@ export class Main {
     private colorClose = `#aa7777`;
     private colorMinSelect = `#77aa77`;
 
-    private color0 = "#dddddd";
+    // private color0 = "#dddddd";
+    private color0 = "#ffffff";
     private color1 = "#555555";
     // private mapSize = mapTemp.length;
 
@@ -466,6 +486,9 @@ export class Main {
         subDiv.style.background = this.color0;
         li.appendChild(subDiv);
 
+        //text
+        setText(subDiv, `rgb(255 0 247)`, 0);
+
         //--------test add img-----------
         // let _img = document.createElement("img");
         // // _img.src = `./res/10${Math.floor(Math.random() * 3) + 1}.png`;
@@ -476,7 +499,6 @@ export class Main {
         subDiv.appendChild(_img);
         //-------------------------------
 
-        // setText(subDiv, `#ffff00`, `class_f`, 0);
         // setText(subDiv, `#00ff00`, `class_g`, 1);
         // setText(subDiv, `#ff0000`, `class_h`, 2);
 

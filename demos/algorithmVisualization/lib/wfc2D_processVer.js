@@ -604,6 +604,7 @@ var WFC;
             this.allSlots.forEach(function (v, i) {
                 //---- chcek has change
                 let m = v.models.length > 1 ? -1 : v.models[0];
+                let e = v.getEntropy();
                 //----
 
                 v.applyCapture(states[i]);
@@ -612,6 +613,10 @@ var WFC;
                 let mCurr = v.models.length > 1 ? -1 : v.models[0];
                 if (mCurr != m) {
                     WFC.onProcess(getPosId(v.position), 1, mCurr);
+                    let eCurr = v.getEntropy();
+                    if(e != eCurr){
+                        WFC.onProcess(getPosId(v.position), 0, eCurr / MaxEntropy);
+                    }
                 }
                 //----
                 if (!v.isCollapse) {
