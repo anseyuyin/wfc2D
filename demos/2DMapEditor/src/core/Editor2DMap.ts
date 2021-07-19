@@ -173,6 +173,9 @@ export class Editor2DMap {
         this.selectOptionEle = document.getElementById("selectOption") as HTMLSelectElement;
         this.importFilesEle = document.getElementById("importFiles") as HTMLInputElement;
         this.importFilesEle.onclick = this.onSelectImport.bind(this);
+        if (this.isSwitchMode) {
+            this.importFilesEle.onclick(null);
+        }
 
         //filse export
         this.exportFileEle = document.getElementById("exportFiles") as HTMLInputElement;

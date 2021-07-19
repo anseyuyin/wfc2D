@@ -84,6 +84,7 @@ System.register([], function (exports_1, context_1) {
                     this.selectOptionEle = document.getElementById("selectOption");
                     this.importFilesEle = document.getElementById("importFiles");
                     this.importFilesEle.onclick = this.onStart.bind(this);
+                    this.importFilesEle.onclick(null);
                     this.tileSizeEle = document.getElementById("tilePixel");
                     this.tileXCountEle = document.getElementById("tileXCount");
                     this.tileXCountEle.onchange = function () {

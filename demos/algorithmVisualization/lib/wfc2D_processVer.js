@@ -204,7 +204,9 @@ var WFC;
                 filterMap[_n._guid] = true;
                 var pass = _n.smallerSelf();
                 //-------------------- 尝试熵减
+                let currIsDirty = _n.isDirtyModels;
                 WFC.onProcess(getPosId(_n.position), 0, _n.getEntropy() / MaxEntropy);
+                _n.isDirtyModels = currIsDirty;
                 //----------------------------
                 if (!pass) {
                     return false;
@@ -614,7 +616,7 @@ var WFC;
                 if (mCurr != m) {
                     WFC.onProcess(getPosId(v.position), 1, mCurr);
                     let eCurr = v.getEntropy();
-                    if(e != eCurr){
+                    if (e != eCurr) {
                         WFC.onProcess(getPosId(v.position), 0, eCurr / MaxEntropy);
                     }
                 }

@@ -4,8 +4,12 @@
 
 [![image](./res/info/cover.png)](https://anseyuyin.github.io/wfc2D/demos/2DMapExample/)
 
-[样例](https://anseyuyin.github.io/wfc2D/demos/2DMapExample/) 
+### Demos
+- [样例](https://anseyuyin.github.io/wfc2D/demos/2DMapExample/) 
+- [算法过程可视化](https://anseyuyin.github.io/wfc2D/demos/algorithmVisualization/) 
 
+### tools
+- [编辑工具](https://anseyuyin.github.io/wfc2D/demos/2DMapEditor/) 
 ## 快速开始
 - ##### 准备好演算数据
     获取方式一：直接测试样例 res/samples/*

@@ -70,6 +70,7 @@ export class Example2DMap {
         this.selectOptionEle = document.getElementById("selectOption") as HTMLSelectElement;
         this.importFilesEle = document.getElementById("importFiles") as HTMLInputElement;
         this.importFilesEle.onclick = this.onStart.bind(this);
+        this.importFilesEle.onclick(null);
         //tile
         this.tileSizeEle = document.getElementById("tilePixel") as HTMLInputElement;
 

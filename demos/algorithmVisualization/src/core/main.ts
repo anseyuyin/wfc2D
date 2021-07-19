@@ -14,26 +14,6 @@ let tileGap = 0;
 let mapSize = 6;
 let greyImgUrl = `../../../../res/info/grey.png`;
 
-//加载json 文件
-// tslint:disable-next-line: only-arrow-functions
-function loadJson(path: string): Promise<string> {
-    return new Promise<string>((resolve, reject) => {
-        let xhr = new XMLHttpRequest();  //实例化XMLHttpRequest 对象
-        xhr.open("GET", path);  //建立连接
-        xhr.send(null);  //发送请求
-        xhr.onreadystatechange = () => {
-            if (xhr.readyState == 4) {
-                if (xhr.status == 200 || xhr.status == 0) {
-                    resolve(xhr.responseText);//接收数据
-                }
-            }
-        };
-        xhr.onerror = (ev) => {
-            reject();
-        };
-    });
-}
-
 // type:[0:top 1:bLeft 2:bRight]
 // tslint:disable-next-line: only-arrow-functions
 function setText(own: HTMLElement, testColor: string, type = 0, className = "") {
@@ -58,15 +38,17 @@ function setText(own: HTMLElement, testColor: string, type = 0, className = "") 
 // tslint:disable-next-line: only-arrow-functions
 function setFocus(imgEle: HTMLImageElement, isSelect: boolean) {
     if (!imgEle) { return; }
+    let pEle = imgEle.parentElement;
+    if (!pEle) { return; }
     if (isSelect) {
-        let _d = 2;
-        imgEle.style.width = `${tileSize - _d * 2}px`;
-        imgEle.style.height = `${tileSize - _d * 2}px`;
-        imgEle.style.border = `${_d}px solid #f5ff14`;
+        let _d = 4;
+        imgEle.style.width = pEle.style.width = `${tileSize - _d * 2}px`;
+        imgEle.style.height = pEle.style.height = `${tileSize - _d * 2}px`;
+        pEle.style.border = `${_d}px solid rgb(255 113 0)`;
     } else {
-        imgEle.style.width = `${tileSize}px`;
-        imgEle.style.height = `${tileSize}px`;
-        imgEle.style.border = "";
+        imgEle.style.width = pEle.style.width = `${tileSize}px`;
+        imgEle.style.height = pEle.style.height = `${tileSize}px`;
+        pEle.style.border = "";
     }
 }
 
@@ -126,28 +108,26 @@ class commandTileLum implements ICommand {
             this.inited = true;
         }
         this.tarParent.style.background = this.tarColor;
-        this.tile.style["mix-blend-mode"] = this.getBlendByColor(this.tarColor);
-        this.textEle.style.display = this.getDisplayByColor(this.tarColor);
+        this.tile.style.display = this.getImgDisplayByColor(this.tarColor);
+        this.textEle.style.display = this.getTextDisplayByColor(this.tarColor);
         this.textEle.textContent = this.tarEnt;
     }
 
     public undo() {
         this.tarParent.style.background = this.lastColor;
-        this.tile.style["mix-blend-mode"] = this.getBlendByColor(this.lastColor);
-        this.textEle.style.display = this.getDisplayByColor(this.lastColor);
+        this.tile.style.display = this.getImgDisplayByColor(this.tarColor);
+        this.textEle.style.display = this.getTextDisplayByColor(this.lastColor);
         this.textEle.textContent = this.lastEnt;
     }
 
     private getColorByLum(lum: number) {
         return `rgb(${lum * 255} ${lum * 255} ${lum * 255})`;
     }
-
-    private getBlendByColor(color: string) {
-        return color == `rgb(0 0 0)` ? "" : "soft-light";
-    }
-
-    private getDisplayByColor(color: string) {
+    private getTextDisplayByColor(color: string) {
         return color == `rgb(0 0 0)` ? "none" : "";
+    }
+    private getImgDisplayByColor(color: string) {
+        return color == `rgb(0 0 0)` ? "" : "none";
     }
 }
 
@@ -196,42 +176,36 @@ export class Main {
         this.init();
     }
 
-    private resPath = `../../../../res/samples/`;
-    private smpleName = `test`;
     private rootContain = document.getElementById("rootcont");
     private slideBar: HTMLInputElement = document.getElementById("play_sb") as HTMLInputElement;
     private btnLeft: HTMLInputElement = document.getElementById("btn_left") as HTMLInputElement;
     private btnCenter: HTMLInputElement = document.getElementById("btn_center") as HTMLInputElement;
     private btnRight: HTMLInputElement = document.getElementById("btn_right") as HTMLInputElement;
     private btnGenerate: HTMLInputElement = document.getElementById("btn_generate") as HTMLInputElement;
+    private btnSpeedEle: HTMLInputElement = document.getElementById("btn_speed") as HTMLInputElement;
     private tilesViewEle: HTMLLIElement = document.getElementById("tiles_view") as HTMLLIElement;
     private timeRate = 1000;
     private slideRangeMax = 10000;
     // private AS = new aStar();
     private DivMap: { [key: string]: HTMLDivElement } = {};
-
-    //生成地图
-    private colorOpen = `#7777aa`;
-    private colorClose = `#aa7777`;
-    private colorMinSelect = `#77aa77`;
-
     // private color0 = "#dddddd";
     private color0 = "#ffffff";
     private color1 = "#555555";
     // private mapSize = mapTemp.length;
 
     private lastTime = -1;
-    private playSpeed = 1;  // /s
+    private playSpeed = 10;  //step move speed of times on one second.
     private progressNum = 0;
     private _isStop = false;
     private lastPerc = -1;
     private tileViewObj: any;
+    private isInGenerateing: boolean = false;
 
     private playFun_Smooth() {
         if (this.isStop) { return; }
         let cInst = CommandMgr.Instance;
         let delta = (Date.now() / this.timeRate) - this.lastTime;
-        this.progressNum += delta * this.slideRangeMax / (cInst.length * this.playSpeed * 0.3);
+        this.progressNum += this.playSpeed * delta * this.slideRangeMax / (cInst.length);
         this.progressNum = this.progressNum > this.slideRangeMax ? this.slideRangeMax : this.progressNum;
         if (this.progressNum < this.slideRangeMax) {
             requestAnimationFrame(this.playFun_Smooth.bind(this));
@@ -274,18 +248,11 @@ export class Main {
         this.lastPerc = perc;
     }
 
-    private colorByNum(num: number) {
-        switch (num) {
-            case 0: return this.colorClose; //for in closelist
-            case 1: return this.colorOpen;   //for in openlist
-            case 2: return this.colorMinSelect; //for selected min
-            // case 3: return this.color_ff;
-            default: return null;
-        }
-    }
     private init() {
         this.testImmutable();
         //-------------------------------
+
+        this.rootContain.style.height = this.rootContain.style.width = `${tileSize * mapSize}`;
 
         //reg eventHandles
         this.slideBar.onmousedown = this.slideBar.ontouchstart = () => {
@@ -326,7 +293,19 @@ export class Main {
 
         this.btnGenerate.onclick = () => {
             let data = this.getWFC2DData();
+            this.clearMap();
             this.toGenerateMap(data);
+        };
+
+        this.btnSpeedEle.value = this.playSpeed.toString();
+        this.btnSpeedEle.onchange = () => {
+            let curr = Number(this.btnSpeedEle.value);
+            if (isNaN(curr) || curr < 1) {
+                curr = 1;
+            }
+            curr = Math.floor(curr);
+            this.btnSpeedEle.value = curr.toString();
+            this.playSpeed = curr;
         };
 
         //插入 编辑查看工具
@@ -344,7 +323,8 @@ export class Main {
 
     private getWFC2DData() {
         let tvObj = this.tileViewObj;
-        if (!tvObj) { return; }
+        if (!tvObj || !tvObj.currTilePackage) { return; }
+        tvObj.neighborDirty = true;
         let currCfg: WFC.wfc2dData = tvObj.mergeConfig(tvObj.currTilePackage.config);
         let arr: string[] = [];
         for (let key in tvObj.viewTilesMap) {
@@ -363,7 +343,30 @@ export class Main {
         return currCfg;
     }
 
+    private clearMap() {
+        //html clear
+        let all = this.rootContain.children;
+        let list = [];
+        for (let i = 0, len = all.length; i < len; i++) {
+            list.push(all.item(i));
+        }
+        list.forEach((v) => {
+            if (v) {
+                this.rootContain.removeChild(v);
+            }
+        });
+
+        //command clear
+        CommandMgr.Instance.clear();
+
+        //进度条归0
+        this.progressNum = 0;
+    }
+
     private async toGenerateMap(_data: WFC.wfc2dData) {
+        if (this.isInGenerateing) { return; }
+        this.isInGenerateing = true;
+
         //wfc2D test
         let data: WFC.wfc2dData;
         // let jsonStr = await loadJson(`${this.resPath}${this.smpleName}/data.json`);
@@ -389,11 +392,6 @@ export class Main {
         // let wfcResult = wfc.collapseSync(mapSize, mapSize);
         let wfcResult = await wfc.collapse(mapSize, mapSize);
 
-        //地图筛选
-        // this.AS.outFilter = (x, y) => {
-        //     return mapTemp[y][x] != null && mapTemp[y][x] == 0;
-        // };
-
         let imgEleArr: HTMLImageElement[] = [];
         let imgs = this.tileViewObj.currTilePackage.imgs;
         let imgBas64 = {};
@@ -416,15 +414,10 @@ export class Main {
                 let imgName: string;
                 let rotate: number;
                 [imgName, rotate] = wfcResult.shift();
-                // let resN = data[].resName;
                 let resN = imgName;
-                // let texturePath = `${this.resPath}${this.smpleName}/${resN}.png`;
-                // let texturePath = `${this.resPath}${this.smpleName}/${resN}.png`;
                 let texturePath = imgBas64[resN];
-                // this.genCell(li, x, y, rotate, texturePath);
                 let imgEle = document.createElement("img");
                 imgEle.src = greyImgUrl;
-                // imgEle.style.transform = `rotate(${rotate * 90}deg)`;
                 imgEleArr.push(imgEle);
                 this.genCell(li, x, y, imgEle);
             }
@@ -473,6 +466,7 @@ export class Main {
         this.commandsMoveByPercent(0); //goBack to frist location
         this.autoPlay(); //start play of process
 
+        this.isInGenerateing = false;
     }
 
     private genCell(li: HTMLElement, x: number, y: number, imgEle: HTMLImageElement) {
@@ -481,8 +475,6 @@ export class Main {
         subDiv.style.width = `${tileSize}px`;
         subDiv.style.height = `${tileSize}px`;
         subDiv.style.left = `${x * tileGap}px`;
-        //subDiv.style.top = `${y * gap}px`;
-        // subDiv.style.background = mapTemp[y][x] == 0 ? this.color0 : this.color1;
         subDiv.style.background = this.color0;
         li.appendChild(subDiv);
 
@@ -490,17 +482,11 @@ export class Main {
         setText(subDiv, `rgb(255 0 247)`, 0);
 
         //--------test add img-----------
-        // let _img = document.createElement("img");
-        // // _img.src = `./res/10${Math.floor(Math.random() * 3) + 1}.png`;
-        // _img.src = `${resPath}`;
         let _img = imgEle;
         _img.style.width = `${tileSize}px`;
         _img.style.height = `${tileSize}px`;
         subDiv.appendChild(_img);
         //-------------------------------
-
-        // setText(subDiv, `#00ff00`, `class_g`, 1);
-        // setText(subDiv, `#ff0000`, `class_h`, 2);
 
         this.DivMap[`${x}_${y}`] = subDiv;
         subDiv["pos"] = { x, y };

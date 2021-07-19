@@ -166,6 +166,9 @@ System.register(["./EditorTools.js", "./EventManager.js", "./TileBase.js"], func
                     this.selectOptionEle = document.getElementById("selectOption");
                     this.importFilesEle = document.getElementById("importFiles");
                     this.importFilesEle.onclick = this.onSelectImport.bind(this);
+                    if (this.isSwitchMode) {
+                        this.importFilesEle.onclick(null);
+                    }
                     this.exportFileEle = document.getElementById("exportFiles");
                     this.exportFileEle.onclick = this.onExportClik.bind(this);
                     this.swOptionAllEle = document.getElementById("swOptionAll");

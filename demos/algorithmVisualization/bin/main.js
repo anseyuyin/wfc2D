@@ -38,23 +38,6 @@ System.register(["./command.js"], function (exports_1, context_1) {
     };
     var command_js_1, CType, tileSize, tileGap, mapSize, greyImgUrl, commandTileImg, commandTileLum, commandTileFocus, Main;
     var __moduleName = context_1 && context_1.id;
-    function loadJson(path) {
-        return new Promise(function (resolve, reject) {
-            var xhr = new XMLHttpRequest();
-            xhr.open("GET", path);
-            xhr.send(null);
-            xhr.onreadystatechange = function () {
-                if (xhr.readyState == 4) {
-                    if (xhr.status == 200 || xhr.status == 0) {
-                        resolve(xhr.responseText);
-                    }
-                }
-            };
-            xhr.onerror = function (ev) {
-                reject();
-            };
-        });
-    }
     function setText(own, testColor, type, className) {
         if (type === void 0) { type = 0; }
         if (className === void 0) { className = ""; }
@@ -87,16 +70,20 @@ System.register(["./command.js"], function (exports_1, context_1) {
         if (!imgEle) {
             return;
         }
+        var pEle = imgEle.parentElement;
+        if (!pEle) {
+            return;
+        }
         if (isSelect) {
-            var _d = 2;
-            imgEle.style.width = tileSize - _d * 2 + "px";
-            imgEle.style.height = tileSize - _d * 2 + "px";
-            imgEle.style.border = _d + "px solid #f5ff14";
+            var _d = 4;
+            imgEle.style.width = pEle.style.width = tileSize - _d * 2 + "px";
+            imgEle.style.height = pEle.style.height = tileSize - _d * 2 + "px";
+            pEle.style.border = _d + "px solid rgb(255 113 0)";
         }
         else {
-            imgEle.style.width = tileSize + "px";
-            imgEle.style.height = tileSize + "px";
-            imgEle.style.border = "";
+            imgEle.style.width = pEle.style.width = tileSize + "px";
+            imgEle.style.height = pEle.style.height = tileSize + "px";
+            pEle.style.border = "";
         }
     }
     return {
@@ -153,24 +140,24 @@ System.register(["./command.js"], function (exports_1, context_1) {
                         this.inited = true;
                     }
                     this.tarParent.style.background = this.tarColor;
-                    this.tile.style["mix-blend-mode"] = this.getBlendByColor(this.tarColor);
-                    this.textEle.style.display = this.getDisplayByColor(this.tarColor);
+                    this.tile.style.display = this.getImgDisplayByColor(this.tarColor);
+                    this.textEle.style.display = this.getTextDisplayByColor(this.tarColor);
                     this.textEle.textContent = this.tarEnt;
                 };
                 commandTileLum.prototype.undo = function () {
                     this.tarParent.style.background = this.lastColor;
-                    this.tile.style["mix-blend-mode"] = this.getBlendByColor(this.lastColor);
-                    this.textEle.style.display = this.getDisplayByColor(this.lastColor);
+                    this.tile.style.display = this.getImgDisplayByColor(this.tarColor);
+                    this.textEle.style.display = this.getTextDisplayByColor(this.lastColor);
                     this.textEle.textContent = this.lastEnt;
                 };
                 commandTileLum.prototype.getColorByLum = function (lum) {
                     return "rgb(" + lum * 255 + " " + lum * 255 + " " + lum * 255 + ")";
                 };
-                commandTileLum.prototype.getBlendByColor = function (color) {
-                    return color == "rgb(0 0 0)" ? "" : "soft-light";
-                };
-                commandTileLum.prototype.getDisplayByColor = function (color) {
+                commandTileLum.prototype.getTextDisplayByColor = function (color) {
                     return color == "rgb(0 0 0)" ? "none" : "";
+                };
+                commandTileLum.prototype.getImgDisplayByColor = function (color) {
+                    return color == "rgb(0 0 0)" ? "" : "none";
                 };
                 return commandTileLum;
             }());
@@ -204,28 +191,25 @@ System.register(["./command.js"], function (exports_1, context_1) {
             }());
             Main = (function () {
                 function Main() {
-                    this.resPath = "../../../../res/samples/";
-                    this.smpleName = "test";
                     this.rootContain = document.getElementById("rootcont");
                     this.slideBar = document.getElementById("play_sb");
                     this.btnLeft = document.getElementById("btn_left");
                     this.btnCenter = document.getElementById("btn_center");
                     this.btnRight = document.getElementById("btn_right");
                     this.btnGenerate = document.getElementById("btn_generate");
+                    this.btnSpeedEle = document.getElementById("btn_speed");
                     this.tilesViewEle = document.getElementById("tiles_view");
                     this.timeRate = 1000;
                     this.slideRangeMax = 10000;
                     this.DivMap = {};
-                    this.colorOpen = "#7777aa";
-                    this.colorClose = "#aa7777";
-                    this.colorMinSelect = "#77aa77";
                     this.color0 = "#ffffff";
                     this.color1 = "#555555";
                     this.lastTime = -1;
-                    this.playSpeed = 1;
+                    this.playSpeed = 10;
                     this.progressNum = 0;
                     this._isStop = false;
                     this.lastPerc = -1;
+                    this.isInGenerateing = false;
                     this.init();
                 }
                 Object.defineProperty(Main.prototype, "isStop", {
@@ -245,7 +229,7 @@ System.register(["./command.js"], function (exports_1, context_1) {
                     }
                     var cInst = command_js_1.CommandMgr.Instance;
                     var delta = (Date.now() / this.timeRate) - this.lastTime;
-                    this.progressNum += delta * this.slideRangeMax / (cInst.length * this.playSpeed * 0.3);
+                    this.progressNum += this.playSpeed * delta * this.slideRangeMax / (cInst.length);
                     this.progressNum = this.progressNum > this.slideRangeMax ? this.slideRangeMax : this.progressNum;
                     if (this.progressNum < this.slideRangeMax) {
                         requestAnimationFrame(this.playFun_Smooth.bind(this));
@@ -289,17 +273,10 @@ System.register(["./command.js"], function (exports_1, context_1) {
                     }
                     this.lastPerc = perc;
                 };
-                Main.prototype.colorByNum = function (num) {
-                    switch (num) {
-                        case 0: return this.colorClose;
-                        case 1: return this.colorOpen;
-                        case 2: return this.colorMinSelect;
-                        default: return null;
-                    }
-                };
                 Main.prototype.init = function () {
                     var _this = this;
                     this.testImmutable();
+                    this.rootContain.style.height = this.rootContain.style.width = "" + tileSize * mapSize;
                     this.slideBar.onmousedown = this.slideBar.ontouchstart = function () {
                         _this.isStop = true;
                     };
@@ -333,7 +310,18 @@ System.register(["./command.js"], function (exports_1, context_1) {
                     };
                     this.btnGenerate.onclick = function () {
                         var data = _this.getWFC2DData();
+                        _this.clearMap();
                         _this.toGenerateMap(data);
+                    };
+                    this.btnSpeedEle.value = this.playSpeed.toString();
+                    this.btnSpeedEle.onchange = function () {
+                        var curr = Number(_this.btnSpeedEle.value);
+                        if (isNaN(curr) || curr < 1) {
+                            curr = 1;
+                        }
+                        curr = Math.floor(curr);
+                        _this.btnSpeedEle.value = curr.toString();
+                        _this.playSpeed = curr;
                     };
                     var _iframe = document.createElement("iframe");
                     _iframe.style.width = "100%";
@@ -348,9 +336,10 @@ System.register(["./command.js"], function (exports_1, context_1) {
                 };
                 Main.prototype.getWFC2DData = function () {
                     var tvObj = this.tileViewObj;
-                    if (!tvObj) {
+                    if (!tvObj || !tvObj.currTilePackage) {
                         return;
                     }
+                    tvObj.neighborDirty = true;
                     var currCfg = tvObj.mergeConfig(tvObj.currTilePackage.config);
                     var arr = [];
                     for (var key in tvObj.viewTilesMap) {
@@ -369,6 +358,21 @@ System.register(["./command.js"], function (exports_1, context_1) {
                     }
                     return currCfg;
                 };
+                Main.prototype.clearMap = function () {
+                    var _this = this;
+                    var all = this.rootContain.children;
+                    var list = [];
+                    for (var i = 0, len = all.length; i < len; i++) {
+                        list.push(all.item(i));
+                    }
+                    list.forEach(function (v) {
+                        if (v) {
+                            _this.rootContain.removeChild(v);
+                        }
+                    });
+                    command_js_1.CommandMgr.Instance.clear();
+                    this.progressNum = 0;
+                };
                 Main.prototype.toGenerateMap = function (_data) {
                     return __awaiter(this, void 0, void 0, function () {
                         var data, tileImgRotates, _loop_1, key, wfc, proccessData, wfcResult, imgEleArr, imgs, imgBas64, key, val, baseName, y, li, x, imgName, rotate, resN, texturePath, imgEle, commandArr, i, len, pV, imgSrc, rtype, temp, comBat, i, len;
@@ -376,6 +380,10 @@ System.register(["./command.js"], function (exports_1, context_1) {
                         return __generator(this, function (_b) {
                             switch (_b.label) {
                                 case 0:
+                                    if (this.isInGenerateing) {
+                                        return [2];
+                                    }
+                                    this.isInGenerateing = true;
                                     data = _data;
                                     tileImgRotates = [];
                                     _loop_1 = function (key) {
@@ -460,6 +468,7 @@ System.register(["./command.js"], function (exports_1, context_1) {
                                     }
                                     this.commandsMoveByPercent(0);
                                     this.autoPlay();
+                                    this.isInGenerateing = false;
                                     return [2];
                             }
                         });
