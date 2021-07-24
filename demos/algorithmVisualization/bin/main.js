@@ -101,7 +101,7 @@ System.register(["./command.js"], function (exports_1, context_1) {
             tileSize = 80;
             tileGap = 0;
             mapSize = 6;
-            greyImgUrl = "../../../../res/info/grey.png";
+            greyImgUrl = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAAoCAIAAAADnC86AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAzSURBVFhH7c0xAQAwEAOheo1/D3XBL4cB3o4UM8VMMVPMFDPFTDFTzBQzxUwxU8wUI9sHdElAqjmr1LAAAAAASUVORK5CYII=";
             commandTileImg = (function () {
                 function commandTileImg(tile, targetSrc, transform) {
                     this.tile = tile;

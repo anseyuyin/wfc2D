@@ -12,7 +12,8 @@ type wfcCommand = { pos: number, ctype: CType, value: number };
 let tileSize = 80;
 let tileGap = 0;
 let mapSize = 6;
-let greyImgUrl = `../../../../res/info/grey.png`;
+// tslint:disable-next-line: max-line-length
+let greyImgUrl = `data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAAoCAIAAAADnC86AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAzSURBVFhH7c0xAQAwEAOheo1/D3XBL4cB3o4UM8VMMVPMFDPFTDFTzBQzxUwxU8wUI9sHdElAqjmr1LAAAAAASUVORK5CYII=`;
 
 // type:[0:top 1:bLeft 2:bRight]
 // tslint:disable-next-line: only-arrow-functions
