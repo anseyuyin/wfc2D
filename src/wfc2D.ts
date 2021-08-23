@@ -411,6 +411,7 @@ namespace WFC {
                 _m.probability = weight;
                 _m.resId = resId;
                 this.modelMap[resId] = _m;
+                this.tileNameIDMap[imgName][rot] = resId;
                 totalWeight += weight;
                 //edgeInfo
                 let r = `${imgName}_${(rot + 0) % 4}`;
@@ -487,6 +488,40 @@ namespace WFC {
         private isCollapsing: boolean = false;
         /** start time of collapse */
         private startTime: number;
+        /** state of Known data */
+        private KnownState: number[][];
+        /** map of tileName - resID */
+        private tileNameIDMap: { [tileName: string]: number[] } = {};
+
+
+        /**
+         * 设置已知条件，明确的设定相应坐标为具体的瓦片。  set Known condition of which Tiles in this position. 
+         * @param stateData 状态信息 {坐标x, 坐标y, 具体的瓦片, 旋转类型(0=0 , 1=90 ,2=180 ,3=270)}。
+         */
+        public setKnown(stateData: { x: number, y: number, tile: string, rotateType: number }[]) {
+            if (!stateData || stateData.length < 1) return;
+            let arrX: number[][] = [];
+            for (let i = 0, len = stateData.length; i < len; i++) {
+                let s = stateData[i];
+                let rotArr = this.tileNameIDMap[s.tile];
+                let resID = rotArr[s.rotateType];
+                if (resID == null) continue;
+
+                let arrY = arrX[s.x];
+                if (!arrY) {
+                    arrY = arrX[s.x] = [];
+                }
+                arrY[s.y] = resID;
+            }
+            this.KnownState = arrX;
+        }
+
+        /**
+         * 清理 设定的已知条件 。clear all of setKnown
+         */
+        public clearKnown() {
+            this.KnownState = null;
+        }
 
         /**
          * （同步版） 执行 坍塌,生成地图数据
@@ -595,20 +630,28 @@ namespace WFC {
         private setData(width: number, height: number) {
             let idList = this.idList;
             let states = this.initialCapture = [];
+            let kSta = this.KnownState;
             //生成slots
-            for (let i = 0; i < height; i++) {
-                for (let j = 0; j < width; j++) {
+            for (let y = 0; y < height; y++) {
+                for (let x = 0; x < width; x++) {
                     let _s: Slot = SlotPool.instance.new_one();
-                    _s.models = idList.concat();    //clone this array
+                    _s.position.x = x;
+                    _s.position.y = y;
+                    if (!kSta || !kSta[x][y]) {
+                        _s.models = idList.concat();    //clone this array
+                    } else {
+                        _s.models = [kSta[x][y]];
+                        _s.isCollapse = true;
+                    }
                     _s.modelsMap = this.modelMap;
-                    _s.position.x = j;
-                    _s.position.y = i;
                     _s.neighbors = [];
                     _s.refresh();
                     let curr = this.allSlots.push(_s);
                     //initial slot cap
                     states[curr - 1] = _s.capture();
-                    this.activeSlotMap.set(_s.guid, _s);
+                    if (_s.models.length > 1){
+                        this.activeSlotMap.set(_s.guid, _s);
+                    }
                 }
             }
 
