@@ -31,6 +31,14 @@ declare namespace WFC {
         private currCapQueCount;
         private isCollapsing;
         private startTime;
+        private KnownState;
+        private tileNameIDMap;
+        setKnown(stateData: {
+            x: number;
+            y: number;
+            tiles: [string, number][];
+        }[]): void;
+        clearKnown(): void;
         collapseSync(width: number, height: number, backOffMaxNum?: number, capQueueMaxLen?: number, capRate?: number): [string, number][];
         collapse(width: number, height: number, backOffMaxNum?: number, capQueueMaxLen?: number, capRate?: number, frameMaxTime?: number): Promise<[string, number][]>;
         private setCollapseInit;

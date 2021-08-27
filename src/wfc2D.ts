@@ -411,7 +411,11 @@ namespace WFC {
                 _m.probability = weight;
                 _m.resId = resId;
                 this.modelMap[resId] = _m;
-                this.tileNameIDMap[imgName][rot] = resId;
+                let arr = this.tileNameIDMap[imgName];
+                if (!arr) {
+                    arr = this.tileNameIDMap[imgName] = [];
+                }
+                arr[rot] = resId;
                 totalWeight += weight;
                 //edgeInfo
                 let r = `${imgName}_${(rot + 0) % 4}`;
@@ -489,30 +493,42 @@ namespace WFC {
         /** start time of collapse */
         private startTime: number;
         /** state of Known data */
-        private KnownState: number[][];
+        private KnownState: number[][][];
         /** map of tileName - resID */
         private tileNameIDMap: { [tileName: string]: number[] } = {};
 
 
         /**
          * 设置已知条件，明确的设定相应坐标为具体的瓦片。  set Known condition of which Tiles in this position. 
-         * @param stateData 状态信息 {坐标x, 坐标y, 具体的瓦片, 旋转类型(0=0 , 1=90 ,2=180 ,3=270)}。
+         * @param stateData 状态信息 {坐标x, 坐标y, {具体的瓦片, 旋转类型(0=0 , 1=90 ,2=180 ,3=270)}[]}。
          */
-        public setKnown(stateData: { x: number, y: number, tile: string, rotateType: number }[]) {
+        public setKnown(stateData: { x: number, y: number, tiles: [string, number][] }[]) {
             if (!stateData || stateData.length < 1) return;
-            let arrX: number[][] = [];
+            let arrX: number[][][] = [];
             for (let i = 0, len = stateData.length; i < len; i++) {
                 let s = stateData[i];
-                let rotArr = this.tileNameIDMap[s.tile];
-                let resID = rotArr[s.rotateType];
-                if (resID == null) continue;
+                let tiles = s.tiles;
+                if (!tiles || tiles.length < 1) continue;
+                for (let j = 0, len1 = tiles.length; j < len1; j++) {
+                    let _tName = tiles[j][0];
+                    let _rotType = tiles[j][1];
+                    if (_tName == null || _rotType == null) continue;
+                    let rotArr = this.tileNameIDMap[_tName];
+                    let resID = rotArr[_rotType];
+                    if (resID == null) continue;
+                    let arrY = arrX[s.x];
+                    if (!arrY) {
+                        arrY = arrX[s.x] = [];
+                    }
+                    let arrIDs = arrY[s.y];
+                    if (!arrIDs) {
+                        arrIDs = arrY[s.y] = [];
+                    }
 
-                let arrY = arrX[s.x];
-                if (!arrY) {
-                    arrY = arrX[s.x] = [];
+                    arrIDs.push(resID);
                 }
-                arrY[s.y] = resID;
             }
+            if (arrX.length < 1) arrX = null;
             this.KnownState = arrX;
         }
 
@@ -637,10 +653,10 @@ namespace WFC {
                     let _s: Slot = SlotPool.instance.new_one();
                     _s.position.x = x;
                     _s.position.y = y;
-                    if (!kSta || !kSta[x][y]) {
+                    if (!kSta || !kSta[x] || kSta[x][y] == null) {
                         _s.models = idList.concat();    //clone this array
                     } else {
-                        _s.models = [kSta[x][y]];
+                        _s.models = kSta[x][y];
                         _s.isCollapse = true;
                     }
                     _s.modelsMap = this.modelMap;
@@ -649,7 +665,7 @@ namespace WFC {
                     let curr = this.allSlots.push(_s);
                     //initial slot cap
                     states[curr - 1] = _s.capture();
-                    if (_s.models.length > 1){
+                    if (_s.models.length > 1) {
                         this.activeSlotMap.set(_s.guid, _s);
                     }
                 }

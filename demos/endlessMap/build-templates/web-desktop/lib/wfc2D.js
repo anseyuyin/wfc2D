@@ -241,6 +241,7 @@ var WFC;
                 }
                 _e += _m.entropy;
             }
+            _e *= -1;
             this._entropy = _e;
         };
         Slot.prototype.getCloseEdgeIdx = function (neighbor) {
@@ -321,7 +322,6 @@ var WFC;
             this.modelIDResInfoMap = {};
             this.backoffCaptureQueue = [];
             this.isCollapsing = false;
-            this.tileNameIDMap = {};
             var connectIdL = _dataArr.connectIdL;
             var connectIdR = _dataArr.connectIdR;
             var totalWeight = 0;
@@ -336,11 +336,6 @@ var WFC;
                 _m.probability = weight;
                 _m.resId = resId;
                 _this.modelMap[resId] = _m;
-                var arr = _this.tileNameIDMap[imgName];
-                if (!arr) {
-                    arr = _this.tileNameIDMap[imgName] = [];
-                }
-                arr[rot] = resId;
                 totalWeight += weight;
                 var r = imgName + "_" + (rot + 0) % 4;
                 var t = imgName + "_" + (rot + 1) % 4;
@@ -374,45 +369,9 @@ var WFC;
                 var _m = this.modelMap[key];
                 _m.probability = _m.probability / totalWeight;
                 var p = _m.probability;
-                _m.entropy = -p * Math.log2(p);
+                _m.entropy = p * Math.log2(p);
             }
         }
-        WFC2D.prototype.setKnown = function (stateData) {
-            if (!stateData || stateData.length < 1)
-                return;
-            var arrX = [];
-            for (var i = 0, len = stateData.length; i < len; i++) {
-                var s = stateData[i];
-                var tiles = s.tiles;
-                if (!tiles || tiles.length < 1)
-                    continue;
-                for (var j = 0, len1 = tiles.length; j < len1; j++) {
-                    var _tName = tiles[j][0];
-                    var _rotType = tiles[j][1];
-                    if (_tName == null || _rotType == null)
-                        continue;
-                    var rotArr = this.tileNameIDMap[_tName];
-                    var resID = rotArr[_rotType];
-                    if (resID == null)
-                        continue;
-                    var arrY = arrX[s.x];
-                    if (!arrY) {
-                        arrY = arrX[s.x] = [];
-                    }
-                    var arrIDs = arrY[s.y];
-                    if (!arrIDs) {
-                        arrIDs = arrY[s.y] = [];
-                    }
-                    arrIDs.push(resID);
-                }
-            }
-            if (arrX.length < 1)
-                arrX = null;
-            this.KnownState = arrX;
-        };
-        WFC2D.prototype.clearKnown = function () {
-            this.KnownState = null;
-        };
         WFC2D.prototype.collapseSync = function (width, height, backOffMaxNum, capQueueMaxLen, capRate) {
             this.startTime = Date.now();
             this.setCollapseInit(width, height, backOffMaxNum, capQueueMaxLen, capRate);
@@ -481,27 +440,18 @@ var WFC;
             var _this = this;
             var idList = this.idList;
             var states = this.initialCapture = [];
-            var kSta = this.KnownState;
-            for (var y = 0; y < height; y++) {
-                for (var x = 0; x < width; x++) {
+            for (var i = 0; i < height; i++) {
+                for (var j = 0; j < width; j++) {
                     var _s = SlotPool.instance.new_one();
-                    _s.position.x = x;
-                    _s.position.y = y;
-                    if (!kSta || !kSta[x] || kSta[x][y] == null) {
-                        _s.models = idList.concat();
-                    }
-                    else {
-                        _s.models = kSta[x][y];
-                        _s.isCollapse = true;
-                    }
+                    _s.models = idList.concat();
                     _s.modelsMap = this.modelMap;
+                    _s.position.x = j;
+                    _s.position.y = i;
                     _s.neighbors = [];
                     _s.refresh();
                     var curr = this.allSlots.push(_s);
                     states[curr - 1] = _s.capture();
-                    if (_s.models.length > 1) {
-                        this.activeSlotMap.set(_s.guid, _s);
-                    }
+                    this.activeSlotMap.set(_s.guid, _s);
                 }
             }
             this.allSlots.forEach(function (v, i) {
