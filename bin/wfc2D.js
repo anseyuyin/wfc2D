@@ -1,6 +1,15 @@
 var WFC;
 (function (WFC) {
-    var Vec2 = (function () {
+    /**
+     * vector2
+     * coordinate of the use 2d system
+     * ---------->  x
+     * |
+     * |
+     * v
+     * y
+     */
+    var Vec2 = /** @class */ (function () {
         function Vec2(x, y) {
             if (x === void 0) { x = 0; }
             if (y === void 0) { y = 0; }
@@ -10,7 +19,7 @@ var WFC;
         return Vec2;
     }());
     var tagInpool = "_IsInPool_";
-    var SlotPool = (function () {
+    var SlotPool = /** @class */ (function () {
         function SlotPool() {
             this.nodelist = [];
         }
@@ -38,7 +47,7 @@ var WFC;
         SlotPool._ins = new SlotPool();
         return SlotPool;
     }());
-    var ModelPool = (function () {
+    var ModelPool = /** @class */ (function () {
         function ModelPool() {
             this.nodelist = [];
         }
@@ -66,22 +75,32 @@ var WFC;
         ModelPool._ins = new ModelPool();
         return ModelPool;
     }());
-    var Slot = (function () {
+    /** Slot 插槽 */
+    var Slot = /** @class */ (function () {
         function Slot() {
+            /** Slot postion of world */
             this.position = new Vec2();
+            /** is collapsed value be true */
             this.isCollapse = false;
+            /** model's of current superposition */
             this.models = [];
+            /** slots of neighbor  */
             this.neighbors = [];
+            /** count map of neighbors modle*/
             this.neighborsMCountMap = {};
+            /** id of solve process */
             this.solveID = -1;
+            /** mark dirty of models */
             this.isDirtyModels = false;
             this._guid = Slot._guidCount++;
         }
         Object.defineProperty(Slot.prototype, "guid", {
+            /** Globally Unique Identifier Of this object*/
             get: function () { return this._guid; },
             enumerable: false,
             configurable: true
         });
+        /** get entropy of now */
         Slot.prototype.getEntropy = function () {
             if (!this.isDirtyModels) {
                 return this._entropy;
@@ -89,11 +108,14 @@ var WFC;
             this.refreshOfModles();
             return this._entropy;
         };
+        /** collapse of this slot models */
         Slot.prototype.collapseNow = function () {
+            //检查一下 自己，因为为了提高性能，每次震荡不是彻底的。
             var pass = this.smallerSelf();
             if (!pass) {
                 return false;
             }
+            //开始坍缩
             this.isCollapse = true;
             if (this.models.length < 2) {
                 return true;
@@ -122,11 +144,17 @@ var WFC;
                     break;
                 }
             }
+            //final 
             ms.length = 0;
             ms.push(selected);
             this.isDirtyModels = true;
             return true;
         };
+        /**
+         * transmit to neighbors
+         * @param solveCount  current solveCount
+         * @returns is success of transmit
+         */
         Slot.prototype.transmit = function (solveCount) {
             var arr = [this];
             var filterMap = {};
@@ -152,6 +180,7 @@ var WFC;
             this.solveID = -1;
             this.refreshOfModles();
         };
+        /** get state capture of this slot  */
         Slot.prototype.capture = function (_cap) {
             var result = _cap;
             if (!result) {
@@ -159,6 +188,7 @@ var WFC;
             }
             result.isCollapse = this.isCollapse;
             result.solveID = this.solveID;
+            // result.models = this.models.concat();
             if (!result.models) {
                 result.models = [];
             }
@@ -170,6 +200,10 @@ var WFC;
             }
             return result;
         };
+        /**
+         * apply capture state to this slot
+         * @param _cap capture data
+         */
         Slot.prototype.applyCapture = function (_cap) {
             var _this = this;
             if (!_cap) {
@@ -183,6 +217,7 @@ var WFC;
             this.solveID = _cap.solveID;
             this.isDirtyModels = true;
         };
+        /** smaller neighbors  */
         Slot.prototype.smallerAround = function (slot, solveCount, out, filterMap) {
             slot.solveID = solveCount;
             var nbs = slot.neighbors;
@@ -190,29 +225,37 @@ var WFC;
                 var _n = nbs[i];
                 if (filterMap[_n._guid] || _n.solveID == solveCount || _n.isCollapse) {
                     continue;
-                }
+                } //清理 已经坍缩的邻居
                 filterMap[_n._guid] = true;
+                //do smaller 
                 var pass = _n.smallerSelf();
                 if (!pass) {
                     return false;
                 }
                 if (_n.isDirtyModels) {
+                    //is slot dirty ,so need transmit to next.
                     out.push(_n);
                 }
             }
             return true;
         };
+        /** smaller self */
         Slot.prototype.smallerSelf = function () {
             var arr = this.neighbors;
             var _map = this.neighborsMCountMap;
             for (var i = 0, len = arr.length; i < len; i++) {
                 var _n = arr[i];
                 var pass = void 0;
+                //test-------
+                // Slot.testsmallerCount++;
                 var key = _n.guid;
                 var lastNCount = _map[key];
                 var currNCount = _n.models.length;
                 _map[key] = currNCount;
+                //smaller when dirty
                 pass = currNCount == lastNCount ? this.models.length > 0 : pass = _n.smaller(this);
+                //test-------
+                // pass = _n.smaller(this);
                 if (!pass) {
                     return false;
                 }
@@ -221,6 +264,7 @@ var WFC;
         };
         Slot.prototype.refreshOfModles = function () {
             this.isDirtyModels = false;
+            //run
             var _e = 0;
             var _map = this.modelsMap;
             var mLen = this.models.length;
@@ -228,6 +272,7 @@ var WFC;
             var rArr = this.edgeRightTestMapArr;
             for (var i = 0; i < mLen; i++) {
                 var _m = _map[this.models[i]];
+                //calculate ConnectTest
                 for (var j = 0; j < 4; j++) {
                     var _edge = _m.edges[j];
                     var lCID = _edge.connectIdLeft;
@@ -239,37 +284,46 @@ var WFC;
                         rArr[j][rCID] = mLen;
                     }
                 }
+                //entropy
                 _e += _m.entropy;
             }
+            // _e *= -1;
             this._entropy = _e;
         };
         Slot.prototype.getCloseEdgeIdx = function (neighbor) {
             var result;
             var _nPos = neighbor.position;
             var _selfPos = this.position;
-            if (_nPos.y < _selfPos.y) {
+            if (_nPos.y < _selfPos.y) { //上
                 result = 1;
+                // result = 0;
             }
-            else if (_nPos.y > _selfPos.y) {
+            else if (_nPos.y > _selfPos.y) { //下
                 result = 3;
+                // result = 2;
             }
-            else if (_nPos.x < _selfPos.x) {
+            else if (_nPos.x < _selfPos.x) { //左
                 result = 2;
+                // result = 3;
             }
-            else if (_nPos.x > _selfPos.x) {
+            else if (_nPos.x > _selfPos.x) { //右
                 result = 0;
+                // result = 1;
             }
             return result;
         };
+        /** smaller neighbor models by this*/
         Slot.prototype.smaller = function (neighbor) {
             var result;
             var _map = this.modelsMap;
             var mLen = this.models.length;
             var oldModelsLen = neighbor.models.length;
+            //找到邻接边
             var selfEdgeIdx = this.getCloseEdgeIdx(neighbor);
             var neighborEdgeIdx = neighbor.getCloseEdgeIdx(this);
             var LeftTestMap = this.getConnectTestMap(selfEdgeIdx, true);
             var rightTestMap = this.getConnectTestMap(selfEdgeIdx, false);
+            //筛选有效model
             var activeModel = [];
             neighbor.models.forEach(function (v) {
                 var _m = _map[v];
@@ -279,6 +333,7 @@ var WFC;
                 }
             });
             neighbor.models = activeModel;
+            //final 
             if (!neighbor.isDirtyModels) {
                 var newModelsLen = neighbor.models.length;
                 neighbor.isDirtyModels = oldModelsLen != newModelsLen;
@@ -295,15 +350,19 @@ var WFC;
             }
             return isLeft ? this.edgeLeftTestMapArr[edgeIdx] : this.edgeRightTestMapArr[edgeIdx];
         };
+        /** guid counter */
         Slot._guidCount = 0;
         return Slot;
     }());
-    var Model = (function () {
+    /** Models that can be displayed */
+    var Model = /** @class */ (function () {
         function Model() {
         }
         return Model;
     }());
-    var EdgeInfo = (function () {
+    /** edge of infomation descript */
+    // tslint:disable-next-line: max-classes-per-file
+    var EdgeInfo = /** @class */ (function () {
         function EdgeInfo(connectIdL, connectIdR) {
             if (connectIdL === void 0) { connectIdL = -1; }
             if (connectIdR === void 0) { connectIdR = -1; }
@@ -312,15 +371,22 @@ var WFC;
         }
         return EdgeInfo;
     }());
-    var WFC2D = (function () {
+    /** wave function collapse of 2d test*/
+    // tslint:disable-next-line: max-classes-per-file
+    var WFC2D = /** @class */ (function () {
         function WFC2D(_dataArr) {
             var _this = this;
+            //current model Map
             this.modelMap = {};
+            //current slot all list
             this.allSlots = [];
             this.activeSlotMap = new Map();
             this.modelIDResInfoMap = {};
+            /** queue of backoff data */
             this.backoffCaptureQueue = [];
-            this.isCollapsing = false;
+            /** state of Collapsing */
+            this._isCollapsing = false;
+            /** map of tileName - resID */
             this.tileNameIDMap = {};
             var connectIdL = _dataArr.connectIdL;
             var connectIdR = _dataArr.connectIdR;
@@ -342,6 +408,7 @@ var WFC;
                 }
                 arr[rot] = resId;
                 totalWeight += weight;
+                //edgeInfo
                 var r = imgName + "_" + (rot + 0) % 4;
                 var t = imgName + "_" + (rot + 1) % 4;
                 var l = imgName + "_" + (rot + 2) % 4;
@@ -367,16 +434,36 @@ var WFC;
                     });
                 }
             };
+            //modes
             for (var k in _dataArr.tiles) {
                 _loop_1(k);
             }
+            //calculate probability & Entropy
             for (var key in this.modelMap) {
                 var _m = this.modelMap[key];
                 _m.probability = _m.probability / totalWeight;
                 var p = _m.probability;
+                //calculate Entropy
+                //i...n
+                //H = -sum(pi * Log2pi + .... pn * Log2pn);
                 _m.entropy = -p * Math.log2(p);
             }
         }
+        Object.defineProperty(WFC2D.prototype, "isCollapseing", {
+            /**
+             * 是否正在 坍缩
+             * state of Collapsing
+             */
+            get: function () {
+                return this._isCollapsing;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        /**
+         * 设置已知条件，明确的设定相应坐标为具体的瓦片。  set Known condition of which Tiles in this position.
+         * @param stateData 状态信息 {坐标x, 坐标y, {具体的瓦片, 旋转类型(0=0 , 1=90 ,2=180 ,3=270)}[]}。
+         */
         WFC2D.prototype.setKnown = function (stateData) {
             if (!stateData || stateData.length < 1)
                 return;
@@ -410,37 +497,78 @@ var WFC;
                 arrX = null;
             this.KnownState = arrX;
         };
+        /**
+         * 清理 设定的已知条件 。clear all of setKnown
+         */
         WFC2D.prototype.clearKnown = function () {
             this.KnownState = null;
         };
+        /**
+         * （同步版） 执行 坍塌,生成地图数据
+         * (sync ver) calculate once collapse
+         * @param width             地图宽度 width of map.
+         * @param height            地图高度 height of map.
+         * @param backOffMaxNum     遇到失败时，返回到前状态重试的最大次数 Max times of back off last state on collapse error.
+         * @param capQueueMaxLen    缓存前状态队列的最大长度 queue max length of capture last state.
+         * @param capRate           缓存率0-1 范围，决定间隔多少次坍塌周期缓存一次 rate of captrue (range 0 - 1), set cycle of capture state.
+         * @returns
+         */
         WFC2D.prototype.collapseSync = function (width, height, backOffMaxNum, capQueueMaxLen, capRate) {
+            // if (this.isCollapsing) { return; }
             this.startTime = Date.now();
+            //init
             this.setCollapseInit(width, height, backOffMaxNum, capQueueMaxLen, capRate);
+            //to do main process
             this.calculateSync();
+            //抛出结果
             return this.resultCollapse();
         };
+        /**
+         * 执行 坍塌,生成地图数据
+         * calculate once collapse
+         * @param width             地图宽度 width of map.
+         * @param height            地图高度 height of map.
+         * @param backOffMaxNum     遇到失败时，返回到前状态重试的最大次数 Max times of back off last state on collapse error.
+         * @param capQueueMaxLen    缓存前状态队列的最大长度 queue max length of capture last state.
+         * @param capRate           缓存率0-1 范围，决定间隔多少次坍塌周期缓存一次 rate of captrue (range 0 - 1), set cycle of capture state.
+         * @param frameMaxTime      每帧最大计算耗时(单位 秒) max time of spend on one frame. (calculation be split to more frame)
+         * @returns
+         */
+        // tslint:disable-next-line: max-line-length
         WFC2D.prototype.collapse = function (width, height, backOffMaxNum, capQueueMaxLen, capRate, frameMaxTime) {
             var _this = this;
             return new Promise(function (resolve, reject) {
+                // if (this.isCollapsing) {
+                //     reject();
+                //     return;
+                // }
                 _this.startTime = Date.now();
+                // tslint:disable-next-line: no-parameter-reassignment
                 if (frameMaxTime == null) {
                     frameMaxTime = 0.333;
                 }
+                //init
                 _this.setCollapseInit(width, height, backOffMaxNum, capQueueMaxLen, capRate);
+                //to do main process
                 _this.calculate()
                     .then(function () {
+                    //抛出结果
                     resolve(_this.resultCollapse());
                 })
                     .catch(reject);
             });
         };
+        /** set init of Collapse*/
         WFC2D.prototype.setCollapseInit = function (width, height, backOffMaxNum, capQueueMaxLen, capRate) {
+            // tslint:disable-next-line: no-parameter-reassignment
             if (backOffMaxNum == null) {
                 backOffMaxNum = 50;
             }
+            // tslint:disable-next-line: no-parameter-reassignment
             if (capQueueMaxLen == null) {
                 capQueueMaxLen = 3;
             }
+            // tslint:disable-next-line: no-parameter-reassignment
             if (capRate == null) {
                 capRate = 0.02;
             }
@@ -462,6 +590,7 @@ var WFC;
             this.height = height;
             this.setData(width, height);
         };
+        /** get collapse result data*/
         WFC2D.prototype.resultCollapse = function () {
             var result = [];
             var arr = this.allSlots;
@@ -474,21 +603,24 @@ var WFC;
                 SlotPool.instance.delete_one(_s);
             }
             this.allSlots.length = 0;
+            // tslint:disable-next-line: max-line-length
             console.log("collapse complete! total time : " + (Date.now() - this.startTime) + ", solveCount : " + this.solveCount + " , backOffCount : " + this.backOffCount);
             return result;
         };
+        /** set data before collapse */
         WFC2D.prototype.setData = function (width, height) {
             var _this = this;
             var idList = this.idList;
             var states = this.initialCapture = [];
             var kSta = this.KnownState;
+            //生成slots
             for (var y = 0; y < height; y++) {
                 for (var x = 0; x < width; x++) {
                     var _s = SlotPool.instance.new_one();
                     _s.position.x = x;
                     _s.position.y = y;
                     if (!kSta || !kSta[x] || kSta[x][y] == null) {
-                        _s.models = idList.concat();
+                        _s.models = idList.concat(); //clone this array
                     }
                     else {
                         _s.models = kSta[x][y];
@@ -498,12 +630,14 @@ var WFC;
                     _s.neighbors = [];
                     _s.refresh();
                     var curr = this.allSlots.push(_s);
+                    //initial slot cap
                     states[curr - 1] = _s.capture();
                     if (_s.models.length > 1) {
                         this.activeSlotMap.set(_s.guid, _s);
                     }
                 }
             }
+            //设置 所有 slot 的邻居
             this.allSlots.forEach(function (v, i) {
                 var pos = v.position;
                 for (var k = 0; k < 4; k++) {
@@ -513,27 +647,31 @@ var WFC;
                     }
                 }
             });
+            //rate cap set
             this.capCycle = Math.floor(this.width * this.height * this.capCycleRate);
         };
         WFC2D.prototype.getNeighbor = function (pos, edgeIdx) {
             var result;
             var tarPosX = pos.x;
             var tarPosY = pos.y;
+            // tslint:disable-next-line: switch-default
             switch (edgeIdx) {
                 case 0:
                     tarPosY--;
-                    break;
+                    break; //上
                 case 1:
                     tarPosX++;
-                    break;
+                    break; //右
                 case 2:
                     tarPosY++;
-                    break;
-                case 3: tarPosX--;
+                    break; //下
+                case 3: tarPosX--; //左
             }
+            //是否超出范围
             if (tarPosX < 0 || tarPosX > this.width || tarPosY < 0 || tarPosY > this.height) {
                 return null;
             }
+            // result = this.allSlots[tarPosY - 0][tarPosX - 0];
             result = this.allSlots[tarPosY * this.width + tarPosX];
             return result;
         };
@@ -541,19 +679,26 @@ var WFC;
             var _this = this;
             return new Promise(function (resolve, reject) {
                 var time = 33.3;
-                _this.isCollapsing = true;
+                _this._isCollapsing = true;
                 var fun = function () {
                     var curr = Date.now();
-                    while (!_this.isComplete) {
-                        _this._doCollapse();
-                        if (Date.now() - curr > time) {
-                            setTimeout(function () {
-                                fun();
-                            }, 0);
-                            return;
+                    try {
+                        while (!_this.isComplete) {
+                            _this._doCollapse();
+                            if (Date.now() - curr > time) {
+                                setTimeout(function () {
+                                    fun();
+                                }, 0);
+                                return;
+                            }
                         }
                     }
-                    _this.isCollapsing = false;
+                    catch (err) {
+                        reject(err);
+                        return;
+                    }
+                    //complete
+                    _this._isCollapsing = false;
                     resolve(null);
                 };
                 fun();
@@ -565,6 +710,7 @@ var WFC;
             }
         };
         WFC2D.prototype._doCollapse = function () {
+            //get one of minimum entropy 
             var _select;
             var isFirst = this.activeSlotMap.size == this.allSlots.length;
             if (!isFirst) {
@@ -592,24 +738,33 @@ var WFC;
                 this.isComplete = true;
                 return;
             }
+            //坍缩 成具体model
             var success = _select.collapseNow();
+            //transmit to around
             if (success) {
                 this.activeSlotMap.delete(_select.guid);
                 success = _select.transmit(this.solveCount);
             }
+            //check
             if (!success) {
+                //err backoff
                 this._backOff();
                 return;
             }
+            //capture slot state
             this.captureAllSlot();
+            //solve once add
             this.solveCount++;
+            //success, to next
         };
         WFC2D.prototype.captureAllSlot = function () {
             this.capSlotCount--;
+            // skip to reduce expend
             if (this.capSlotCount > 0) {
                 return;
             }
             this.capSlotCount = this.capCycle;
+            //do cap
             var queue = this.backoffCaptureQueue;
             var states = this.currCapQueCount >= this.capQueueMaxLen ? queue.shift() : [];
             if (!states) {
@@ -621,11 +776,13 @@ var WFC;
             queue.push(states);
             this.currCapQueCount = this.currCapQueCount >= this.capQueueMaxLen ? this.capQueueMaxLen : ++this.currCapQueCount;
         };
+        //backOff to last state
         WFC2D.prototype._backOff = function () {
             var _this = this;
             this.backOffCount++;
             if (this.backOffCount > this.backOffMaxNum) {
                 var msg = "backOff over the limit Max Count : " + this.backOffMaxNum + " , you need raise backOffMaxNum or capQueueMaxLen.";
+                //alert(msg);
                 throw new Error(msg);
             }
             var states = this.backoffCaptureQueue.pop();

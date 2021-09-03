@@ -489,7 +489,7 @@ namespace WFC {
         /** count of current captrue queue */
         private currCapQueCount: number;
         /** state of Collapsing */
-        private isCollapsing: boolean = false;
+        private _isCollapsing: boolean = false;
         /** start time of collapse */
         private startTime: number;
         /** state of Known data */
@@ -497,6 +497,13 @@ namespace WFC {
         /** map of tileName - resID */
         private tileNameIDMap: { [tileName: string]: number[] } = {};
 
+        /**
+         * 是否正在 坍缩 
+         * state of Collapsing
+         */
+        public get isCollapseing(){
+            return this._isCollapsing;
+        }
 
         /**
          * 设置已知条件，明确的设定相应坐标为具体的瓦片。  set Known condition of which Tiles in this position. 
@@ -709,20 +716,26 @@ namespace WFC {
         private calculate() {
             return new Promise((resolve, reject) => {
                 let time = 33.3;
-                this.isCollapsing = true;
+                this._isCollapsing = true;
                 let fun = () => {
                     let curr = Date.now();
-                    while (!this.isComplete) {
-                        this._doCollapse();
-                        if (Date.now() - curr > time) {
-                            setTimeout(() => {
-                                fun();
-                            }, 0);
-                            return;
+                    try{
+                        while (!this.isComplete) {
+                            this._doCollapse();
+                            if (Date.now() - curr > time) {
+                                setTimeout(() => {
+                                    fun();
+                                }, 0);
+                                return;
+                            }
                         }
+                    }catch(err){
+                        reject(err);
+                        return;
                     }
+                    
                     //complete
-                    this.isCollapsing = false;
+                    this._isCollapsing = false;
                     resolve(null);
                 };
                 fun();

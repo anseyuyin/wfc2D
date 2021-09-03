@@ -46,11 +46,14 @@ export class TileMap extends Component {
 
         //获取资源
         // let path = `../../../res/samples/Circuit`;
-        let resName = "Circuit";
+        // let resName = "Circuit";
+        let resName = "Summer";
         let path = `https://anseyuyin.github.io/wfc2D/res/samples/${resName}/`;
         let data = await WfcLoader.getWFC(path);
+        this._gridSize = 1000;
         Grid.wfcDataImg = data as any;
-        Grid.tileSize = 100;
+        Grid.tileSize = 50;
+        Grid.horn = [["grass 0",0]];
 
         // let c = data?.config as WFC.wfc2dData;
         // //test cacle wfc

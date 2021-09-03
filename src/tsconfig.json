@@ -12,7 +12,7 @@
     "declaration": true,
     "noImplicitAny": false,
     "sourceMap": true,
-    "removeComments": true,
+    "removeComments": false,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     //"outFile": "../bin/astar.js",

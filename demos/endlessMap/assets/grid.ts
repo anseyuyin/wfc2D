@@ -20,14 +20,18 @@ export class Grid extends Component {
     private static IN_POOL_TAG = "__inPoolTag__";
     private static posDataMap: Map<string, [string, number][]> = new Map();
     private static collapseingMap: Map<string, boolean> = new Map();
+    private static _wfcPool: WFC.WFC2D[] = [];
 
     /** 坍缩完成 */
     public static readonly ON_COLLAPSED = "ON_COLLAPSED";
-
+    /** 瓦块像素尺寸 */
     public static tileSize: number = 50;
+    /** wfc 资源数据 */
     public static wfcDataImg: wfcDataImg;
     /** 事件管理对象 */
     public static eventer: Eventer = new Eventer();
+    /**  */
+    public static horn: [string, number][];
 
     public static poolNew(): Grid {
         let result: Grid = this._poolArr.pop() as Grid;
@@ -45,6 +49,29 @@ export class Grid extends Component {
         this._poolArr.push(val);
     }
 
+    private static getWFC() {
+        let result;
+        for (let i = 0, len = this._wfcPool.length; i < len; i++) {
+            let val = this._wfcPool[i];
+            if (!val.isCollapseing) {
+                result = val;
+                this._wfcPool.splice(i, 1);
+                break;
+            }
+        }
+
+        if (!result) {
+            result = new WFC.WFC2D(Grid.wfcDataImg.config);
+        }
+
+        return result;
+    }
+
+    private static storeWFC(_wfc: WFC.WFC2D) {
+        if (!_wfc) return;
+        this._wfcPool.push(_wfc);
+    }
+
     //--------------------------------------------------
     private _size: number = 100;
     private _GridPos: Vec2 = new Vec2();
@@ -55,7 +82,8 @@ export class Grid extends Component {
 
     private get wfc() {
         if (!this._wfc && Grid.wfcDataImg) {
-            this._wfc = new WFC.WFC2D(Grid.wfcDataImg.config);
+            // this._wfc = new WFC.WFC2D(Grid.wfcDataImg.config);
+            this._wfc = Grid.getWFC();
         }
         return this._wfc;
     }
@@ -137,27 +165,35 @@ export class Grid extends Component {
             this.refrashDisplay();
         } else {
             //生成数据
-            let size = Math.floor(this._size / Grid.tileSize);
-            let hasCN = this.calcaknown(completeNeighbor);
-            if (hasCN) { size += 2; }
-
             Grid.collapseingMap.set(key, true);
+            let size = Math.floor(this._size / Grid.tileSize);
+            this.wfc?.clearKnown();
+
+            let cnArr = this.calcaknown(completeNeighbor);
+            let hasCN = cnArr && cnArr.length > 0;
+            let baseCn = this.calcaHornknown(completeNeighbor);
+            if (hasCN) {
+                size += 2;
+                baseCn = baseCn.concat(cnArr as any);
+            }
+            this.wfc?.setKnown(baseCn);
             try {
-                this.wfc?.collapse(size, size).then((_d) => {
+                this.wfc?.collapse(size, size, 1000).then((_d) => {
                     Grid.eventer.Emit(Grid.ON_COLLAPSED, key);  //派发事件
-                    if(_d.length < 1){
+                    Grid.collapseingMap.delete(key);
+                    if (_d.length < 1) {
                         console.error(`collapse 计算的返回值为空`);
-                        return ;
+                        return;
                     }
                     if (key == this.getPosKey()) {
                         if (hasCN) {
                             this.cutData(_d, size);
                         }
                         Grid.posDataMap.set(key, _d);
-                        Grid.collapseingMap.delete(key);
                         this.refrashDisplay();
                     }
                 }).catch((err) => {
+                    Grid.collapseingMap.delete(key);
                     console.error(err);
                 });
             } catch (err) {
@@ -175,6 +211,11 @@ export class Grid extends Component {
                 val.node.active = false;
             }
         });
+
+        if(this._wfc?.isCollapseing){
+            Grid.storeWFC(this._wfc as any);
+            this._wfc = null;
+        }
     }
 
     setGridPosition(pos: Vec2) {
@@ -234,10 +275,31 @@ export class Grid extends Component {
         // }
     }
 
+    private calcaHornknown(completeNeighbor?: number[]) {
+        let cnb = completeNeighbor;
+        let rawSize = Math.floor(this._size / Grid.tileSize);
+        let arr: { x: number; y: number; tiles: [string, number][]; }[] = [];
+        if (cnb && cnb.length > 0) {
+            let size = rawSize + 2;
+            let max = size - 2;
+            arr.push({ x: 1, y: 1, tiles: Grid.horn });
+            arr.push({ x: max, y: 1, tiles: Grid.horn });
+            arr.push({ x: max, y: max, tiles: Grid.horn });
+            arr.push({ x: 1, y: max, tiles: Grid.horn });
+        } else {
+            let max = rawSize - 1;
+            arr.push({ x: 0, y: 0, tiles: Grid.horn });
+            arr.push({ x: max, y: 0, tiles: Grid.horn });
+            arr.push({ x: max, y: max, tiles: Grid.horn });
+            arr.push({ x: 0, y: max, tiles: Grid.horn });
+        }
+        return arr;
+    }
+
     //计算 已知条件
     private calcaknown(completeNeighbor?: number[]) {
         let hasCN = completeNeighbor && completeNeighbor.length > 0;
-        if (!hasCN) return hasCN;
+        if (!hasCN) return null;
 
         let rawSize = Math.floor(this._size / Grid.tileSize);
         let cSize = rawSize + 2;
@@ -319,9 +381,8 @@ export class Grid extends Component {
         //     { x: 2, y: 0, tiles: [["wire", 1]] },
         //     { x: 3, y: 0, tiles: [["wire", 1]] },
         // ]);
-        this.wfc?.setKnown(knownArr);
-
-        return hasCN;
+        // this.wfc?.setKnown(knownArr);
+        return knownArr;
     }
 
     //裁剪数据

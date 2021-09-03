@@ -7,18 +7,17 @@ const { ccclass, property } = _decorator;
 export class TouchMove extends Component {
     private static readonly help_v2 = new Vec2();
     private static readonly help_v3 = new Vec3();
-    // [1]
-    // dummy = '';
-
-    // [2]
-    // @property
-    // serializableDummy = 0;
 
     @property({ type: TileMap })
     tileMapObj: TileMap | null = null;
 
     private startPoint: Vec2 = new Vec2();
     private startPos: Vec3 = new Vec3();
+    private moveDir: Vec2 = new Vec2();
+    private currMoveSpeed: number = 10;
+    private maxSpeed: number = 1000;
+    private minSpeed: number = 50;
+    private dampingRate: number = 0.1;
 
     start() {
         // [3]
@@ -30,11 +29,17 @@ export class TouchMove extends Component {
         });
     }
 
+    update(dt: number) {
+        this.damper(dt);
+        this.doMoveByDir(dt);
+    }
+
     onStart(event: EventTouch) {
         // console.log(` on touch canvas  start! touch point : ${event.getLocation().toString()}`)
         event.getLocation(this.startPoint);
-        this.startPos = this.tileMapObj?.node.position.clone() as Vec3;
-
+        if (this.startPos, this.tileMapObj?.node.position) {
+            Vec2.copy(this.startPos, this.tileMapObj?.node.position);
+        }
     }
 
     onEnd(event: EventTouch) {
@@ -47,25 +52,37 @@ export class TouchMove extends Component {
         let dtPos = TouchMove.help_v2;
         event.getLocation(dtPos);
         dtPos.subtract(this.startPoint);
+        let dist = dtPos.length();
+        Vec2.copy(this.moveDir, dtPos);
+        this.moveDir.normalize();
+        // let dtPosV3 = TouchMove.help_v3;
+        // dtPosV3.set(dtPos.x, dtPos.y, 0);
+        // dtPosV3.add(this.startPos);
+        // this.tileMapObj?.node.setPosition(dtPosV3);
+
+        //set speed
+        this.currMoveSpeed = dist / 100 * this.maxSpeed;
+    }
+
+    doMoveByDir(dt: number) {
+        if (this.moveDir.lengthSqr() == 0) {
+            return;
+        }
+        let dtPos = TouchMove.help_v2;
+        Vec2.multiplyScalar(dtPos, this.moveDir, dt * this.currMoveSpeed);
         let dtPosV3 = TouchMove.help_v3;
         dtPosV3.set(dtPos.x, dtPos.y, 0);
-        dtPosV3.add(this.startPos);
-
+        if (this.tileMapObj?.node.position) {
+            dtPosV3.add(this.tileMapObj?.node.position);
+        }
         this.tileMapObj?.node.setPosition(dtPosV3);
     }
 
-    // update (deltaTime: number) {
-    //     // [4]
-    // }
+    damper(dt: number) {
+        this.currMoveSpeed -= this.dampingRate * this.currMoveSpeed;
+        this.currMoveSpeed = Math.min(this.currMoveSpeed, this.maxSpeed);
+        this.currMoveSpeed = Math.max(this.currMoveSpeed, this.minSpeed);
+    }
+
 }
 
-/**
- * [1] Class member could be defined like this.
- * [2] Use `property` decorator if your want the member to be serializable.
- * [3] Your initialization goes here.
- * [4] Your update function goes here.
- *
- * Learn more about scripting: https://docs.cocos.com/creator/3.0/manual/en/scripting/
- * Learn more about CCClass: https://docs.cocos.com/creator/3.0/manual/en/scripting/ccclass.html
- * Learn more about life-cycle callbacks: https://docs.cocos.com/creator/3.0/manual/en/scripting/life-cycle-callbacks.html
- */
