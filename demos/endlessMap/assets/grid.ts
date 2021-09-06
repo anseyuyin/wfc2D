@@ -212,7 +212,7 @@ export class Grid extends Component {
             }
         });
 
-        if(this._wfc?.isCollapseing){
+        if (this._wfc && this._wfc?.isCollapseing) {
             Grid.storeWFC(this._wfc as any);
             this._wfc = null;
         }
@@ -276,23 +276,20 @@ export class Grid extends Component {
     }
 
     private calcaHornknown(completeNeighbor?: number[]) {
+        let arr: { x: number; y: number; tiles: [string, number][]; }[] = [];
+        if (!Grid.horn || Grid.horn.length < 1) return arr;
         let cnb = completeNeighbor;
         let rawSize = Math.floor(this._size / Grid.tileSize);
-        let arr: { x: number; y: number; tiles: [string, number][]; }[] = [];
+        let max: number;
         if (cnb && cnb.length > 0) {
-            let size = rawSize + 2;
-            let max = size - 2;
-            arr.push({ x: 1, y: 1, tiles: Grid.horn });
-            arr.push({ x: max, y: 1, tiles: Grid.horn });
-            arr.push({ x: max, y: max, tiles: Grid.horn });
-            arr.push({ x: 1, y: max, tiles: Grid.horn });
+            max = (rawSize + 2) - 2;
         } else {
-            let max = rawSize - 1;
-            arr.push({ x: 0, y: 0, tiles: Grid.horn });
-            arr.push({ x: max, y: 0, tiles: Grid.horn });
-            arr.push({ x: max, y: max, tiles: Grid.horn });
-            arr.push({ x: 0, y: max, tiles: Grid.horn });
+            max = rawSize - 1;
         }
+        arr.push({ x: 0, y: 0, tiles: Grid.horn });
+        arr.push({ x: max, y: 0, tiles: Grid.horn });
+        arr.push({ x: max, y: max, tiles: Grid.horn });
+        arr.push({ x: 0, y: max, tiles: Grid.horn });
         return arr;
     }
 

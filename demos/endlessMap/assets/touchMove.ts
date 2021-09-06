@@ -40,6 +40,7 @@ export class TouchMove extends Component {
         if (this.startPos, this.tileMapObj?.node.position) {
             Vec2.copy(this.startPos, this.tileMapObj?.node.position);
         }
+        this.moveDir.set(0, 0);
     }
 
     onEnd(event: EventTouch) {
@@ -61,7 +62,7 @@ export class TouchMove extends Component {
         // this.tileMapObj?.node.setPosition(dtPosV3);
 
         //set speed
-        this.currMoveSpeed = dist / 100 * this.maxSpeed;
+        // this.currMoveSpeed = dist / 100 * this.maxSpeed;
     }
 
     doMoveByDir(dt: number) {
