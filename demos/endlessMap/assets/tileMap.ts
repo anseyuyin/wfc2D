@@ -25,35 +25,48 @@ export class TileMap extends Component {
     private grids: Grid[] = [];
     private _canvas: Canvas | null = null;
     private _gridMap: Map<string, Grid> = new Map();
-    private _inited = false;
+    private _canRun = false;
     private _OffsetList: Vec2[] = [];
 
     start() {
-        this.init();
+        let s = Director.instance.getScene();
+        this._canvas = s?.getComponentInChildren(Canvas) as Canvas;
+        // this.setRes("Summer");
+        this.setRes({ resName: "Summer", horn: [["grass 0", 0]] });
+
     }
 
-
-
     update(deltaTime: number) {
-        if (!this._inited) return;
+        if (!this._canRun) return;
         this.ckBorderOver();
     }
 
-    private async init() {
-        if (this._inited) return;
-        let s = Director.instance.getScene();
-        this._canvas = s?.getComponentInChildren(Canvas) as Canvas;
+    clear() {
+        this._canRun = false;
+        this._gridMap.forEach((val) => {
+            Grid.poolDelete(val);
+        });
+        this._gridMap.clear();
+        Grid.clear();
+    }
 
+    // async setRes(_resName: string) {
+    async setRes(cfg: any) {
+        if (this._canRun) return;
         //获取资源
         // let path = `../../../res/samples/Circuit`;
         // let resName = "Circuit";
-        let resName = "Summer";
+        // let jsonS = { resName: "Summer", horn: [["grass 0", 0]] };
+        let jsonS = cfg;
+        // let jsonS = { resName: "Village", horn: [["village_3_0", 0]] };
+
+        let resName = jsonS.resName;
         let path = `https://anseyuyin.github.io/wfc2D/res/samples/${resName}/`;
         let data = await WfcLoader.getWFC(path);
         this._gridSize = 1000;
-        Grid.wfcDataImg = data as any;
         Grid.tileSize = 50;
-        Grid.horn = [["grass 0",0]];
+        Grid.wfcDataImg = data as any;
+        Grid.horn = jsonS.horn as any;
 
         // let c = data?.config as WFC.wfc2dData;
         // //test cacle wfc
@@ -64,7 +77,7 @@ export class TileMap extends Component {
         this._OffsetList.push(new Vec2(1, 0));
         this._OffsetList.push(new Vec2(0, -1));
         this._OffsetList.push(new Vec2(-1, 0));
-        this._inited = true;
+        this._canRun = true;
     }
 
     /** 检查是否超出了边界 */
@@ -78,10 +91,10 @@ export class TileMap extends Component {
         bound.set(-(pos.x + halfW), -(pos.y + halfH), canvasUITrans.width, canvasUITrans.height);
         //over scale 保障平滑
         let overScale = 0.5;
-        bound.width     += halfW * overScale;
-        bound.height    += halfH * overScale;
-        bound.x         -= halfW * overScale;
-        bound.y         -= halfH * overScale;
+        bound.width += halfW * overScale;
+        bound.height += halfH * overScale;
+        bound.x -= halfW * overScale;
+        bound.y -= halfH * overScale;
 
         //console.log(bound.toString());
         let xMin = Math.floor(bound.x / this._gridSize);

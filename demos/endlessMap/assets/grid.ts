@@ -1,6 +1,6 @@
 
 import { _decorator, Component, Node, Vec2, Vec3, Sprite, resources, SpriteFrame, UITransform, math, Layers, Mesh } from 'cc';
-import { Eventer } from './eventer.ts';
+import { Eventer } from './eventer';
 import { wfcDataImg } from './wfcLoader';
 const { ccclass, property } = _decorator;
 
@@ -70,6 +70,12 @@ export class Grid extends Component {
     private static storeWFC(_wfc: WFC.WFC2D) {
         if (!_wfc) return;
         this._wfcPool.push(_wfc);
+    }
+
+    public static clear(){
+        this.posDataMap.clear();
+        this.posDataMap.clear();
+        this._wfcPool.length = 0;
     }
 
     //--------------------------------------------------
