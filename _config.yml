@@ -1,2 +1,9 @@
 theme: jekyll-theme-cayman
 include_relative : demos/endlessMap/build/web-desktop/cocos-js/_commonjsHelpers-364bf34e.js
+---
+title: My page
+my_variable: _commonjsHelpers-364bf34e.js
+---
+{% if page.my_variable %}
+  {% include {{ page.my_variable }} %}
+{% endif %}
