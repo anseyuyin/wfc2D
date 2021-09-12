@@ -1,9 +1,9 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html>
   <head>
     <meta charset="utf-8">
 
-    <title>Cocos Creator | <%= projectName %></title>
+    <title>Cocos Creator | endlessMap</title>
 
     <meta name="viewport" content="width=device-width,user-scalable=no,initial-scale=1, minimum-scale=1,maximum-scale=1"/>
     <meta name="apple-mobile-web-app-capable" content="yes"/>
@@ -21,14 +21,25 @@
 	<script src="https://anseyuyin.github.io/wfc2D/bin/wfc2D.js" ></script>
   </head>
   <body>
-    <h1 class="header"><%= projectName %></h1>
+    <h1 class="header">endlessMap</h1>
 
-    <div id="GameDiv" style="width:<%= previewWidth %>px; height: <%= previewHeight %>px;">
-        <canvas id="GameCanvas" width="<%= previewWidth %>" height="<%= previewHeight %>"></canvas>
+    <div id="GameDiv" style="width:960px; height: 640px;">
+        <canvas id="GameCanvas" width="960" height="640"></canvas>
     </div>
     <p class="footer">
       Created with <a href="https://www.cocos.com/products" title="Cocos Creator">Cocos Creator</a>
     </p>
-    <%- include(cocosTemplate, {}) %>
+    <!-- Polyfills bundle. -->
+<script src="src/polyfills.bundle.js" charset="utf-8"> </script>
+
+<!-- SystemJS support. -->
+<script src="src/system.bundle.js" charset="utf-8"> </script>
+
+<!-- Import map -->
+<script src="src/import-map.json" type="systemjs-importmap" charset="utf-8"> </script>
+
+<script>
+    System.import('./index.js').catch(function(err) { console.error(err); })
+</script>
   </body>
 </html>

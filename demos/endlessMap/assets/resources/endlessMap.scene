@@ -205,7 +205,7 @@
     "_priority": 1073741824,
     "_fov": 45,
     "_fovAxis": 0,
-    "_orthoHeight": 357.63277693474964,
+    "_orthoHeight": 344.058394160584,
     "_near": 1,
     "_far": 2000,
     "_color": {
@@ -241,7 +241,7 @@
       "__id__": 4
     },
     "_children": [],
-    "_active": true,
+    "_active": false,
     "_components": [
       {
         "__id__": 8
@@ -418,7 +418,7 @@
       "__id__": 12
     },
     "_children": [],
-    "_active": true,
+    "_active": false,
     "_components": [
       {
         "__id__": 14
@@ -1123,7 +1123,7 @@
     "_priority": 1073741824,
     "_fov": 45,
     "_fovAxis": 0,
-    "_orthoHeight": 357.63277693474964,
+    "_orthoHeight": 344.058394160584,
     "_near": 1,
     "_far": 2000,
     "_color": {
