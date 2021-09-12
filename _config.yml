@@ -1,2 +1,2 @@
 theme: jekyll-theme-cayman
-{% include_relative cocos-js/_commonjsHelpers-364bf34e.js %}
+{% include_relative demos/endlessMap/build/web-desktop/cocos-js/_commonjsHelpers-364bf34e.js %}
