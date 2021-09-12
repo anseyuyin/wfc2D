@@ -72,10 +72,11 @@ export class Grid extends Component {
         this._wfcPool.push(_wfc);
     }
 
-    public static clear(){
+    public static clear() {
         this.posDataMap.clear();
         this.posDataMap.clear();
         this._wfcPool.length = 0;
+        this._poolArr.length = 0;
     }
 
     //--------------------------------------------------
@@ -107,22 +108,6 @@ export class Grid extends Component {
 
     start() {
         this.node.on
-        // // [3]
-        // this._sp = this.addComponent(Sprite);
-        // let tran = this.node.getComponent(UITransform);
-        // // let file = "imgs/01/spriteFrame";
-        // let file = "test_plist/123/3";
-        // resources.load<SpriteFrame>(file, SpriteFrame, (err, spf) => {
-        //     if (this._sp) {
-        //         this._sp.spriteFrame = spf;
-        //         if (tran) {
-        //             tran.width = this._size;
-        //             tran.height = this._size;
-        //             tran.setAnchorPoint(new Vec2(0, 0));
-        //         }
-        //     }
-        // });
-
         //create
         let tsize = Grid.tileSize;
         let len = Math.floor(this._size / tsize);
@@ -264,6 +249,7 @@ export class Grid extends Component {
             let y = Math.floor((len - 1 - i) / size);
             let key = `${x}_${y}`;
             let val = _map.get(key) as Sprite;
+            if (!val) continue;
             val.node.active = true;
             val.spriteFrame = Grid.wfcDataImg.imgs[data[i][0]] as any;
             val.node.eulerAngles;

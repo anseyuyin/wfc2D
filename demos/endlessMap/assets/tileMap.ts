@@ -32,7 +32,7 @@ export class TileMap extends Component {
         let s = Director.instance.getScene();
         this._canvas = s?.getComponentInChildren(Canvas) as Canvas;
         // this.setRes("Summer");
-        this.setRes({ resName: "Summer", horn: [["grass 0", 0]] });
+        // this.setRes({ resName: "Summer", horn: [["grass 0", 0]] });
 
     }
 
@@ -44,6 +44,10 @@ export class TileMap extends Component {
     clear() {
         this._canRun = false;
         this._gridMap.forEach((val) => {
+            val?.hide();
+            if (val && val.node.parent) {
+                val.node.parent.removeChild(val.node);
+            }
             Grid.poolDelete(val);
         });
         this._gridMap.clear();
@@ -54,15 +58,11 @@ export class TileMap extends Component {
     async setRes(cfg: any) {
         if (this._canRun) return;
         //获取资源
-        // let path = `../../../res/samples/Circuit`;
-        // let resName = "Circuit";
-        // let jsonS = { resName: "Summer", horn: [["grass 0", 0]] };
         let jsonS = cfg;
-        // let jsonS = { resName: "Village", horn: [["village_3_0", 0]] };
-
         let resName = jsonS.resName;
         let path = `https://anseyuyin.github.io/wfc2D/res/samples/${resName}/`;
         let data = await WfcLoader.getWFC(path);
+        //设置 Grid 的尺寸
         this._gridSize = 1000;
         Grid.tileSize = 50;
         Grid.wfcDataImg = data as any;
