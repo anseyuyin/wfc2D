@@ -1,1 +1,2 @@
 theme: jekyll-theme-cayman
+{% include_relative cocos-js/_commonjsHelpers-364bf34e.js %}
