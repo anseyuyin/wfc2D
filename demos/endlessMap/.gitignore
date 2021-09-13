@@ -8,7 +8,7 @@ local/
 build/*
 !build/web-desktop/
 profiles/
-native
+# native
 #//////////////////////////
 # NPM
 #//////////////////////////
