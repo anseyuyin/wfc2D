@@ -54,6 +54,7 @@ export class TouchMove extends Component {
         event.getLocation(dtPos);
         dtPos.subtract(this.startPoint);
         let dist = dtPos.length();
+        if(dist < 1) return; //移动的很小 暂停 移动
         Vec2.copy(this.moveDir, dtPos);
         this.moveDir.normalize();
         // let dtPosV3 = TouchMove.help_v3;

@@ -1,5 +1,6 @@
 
 import { _decorator, Component, Node, Rect, UITransform, Canvas, Director, math, Vec2, tweenUtil, Layers, System } from 'cc';
+import { AppMain } from './appMain';
 import { Grid, GridState } from './grid';
 import { WfcLoader } from './wfcLoader';
 const { ccclass, property } = _decorator;
@@ -60,13 +61,19 @@ export class TileMap extends Component {
         //获取资源
         let jsonS = cfg;
         let resName = jsonS.resName;
-        let path = `https://anseyuyin.github.io/wfc2D/res/samples/${resName}/`;
+        let path = `${AppMain.CDNPath}/res/samples/${resName}/`;
         let data = await WfcLoader.getWFC(path);
         //设置 Grid 的尺寸
         this._gridSize = 1000;
         Grid.tileSize = 50;
         Grid.wfcDataImg = data as any;
+        
+        //预设配置
         Grid.horn = jsonS.horn as any;
+        Grid.top = jsonS.top as any;
+        Grid.right = jsonS.right as any;
+        Grid.bottom = jsonS.bottom as any;
+        Grid.left = jsonS.left as any;
 
         // let c = data?.config as WFC.wfc2dData;
         // //test cacle wfc

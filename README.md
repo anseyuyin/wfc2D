@@ -7,7 +7,7 @@
 ### Demos
 - [样例](https://anseyuyin.github.io/wfc2D/demos/2DMapExample/) 
 - [算法过程可视化](https://anseyuyin.github.io/wfc2D/demos/algorithmVisualization/) 
-- [无限地图](https://anseyuyin.github.io/wfc2D/demos/endlessMap/build/web-desktop/) 
+- [无限地图](https://anseyuyin.github.io/wfc2D/demos/endlessMap/build/web-mobile/) 
 
 ### tools
 - [编辑工具](https://anseyuyin.github.io/wfc2D/demos/2DMapEditor/) 

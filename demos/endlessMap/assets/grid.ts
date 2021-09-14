@@ -30,8 +30,12 @@ export class Grid extends Component {
     public static wfcDataImg: wfcDataImg;
     /** 事件管理对象 */
     public static eventer: Eventer = new Eventer();
-    /**  */
+    /** 连接角 */
     public static horn: [string, number][];
+    public static top: [string, number][];
+    public static right: [string, number][];
+    public static bottom: [string, number][];
+    public static left: [string, number][];
 
     public static poolNew(): Grid {
         let result: Grid = this._poolArr.pop() as Grid;
@@ -147,7 +151,7 @@ export class Grid extends Component {
 
     /**
      * 显示
-     * @param completeNeighbor 已经完成的邻居(0 上,1 下,2 左,3 右)
+     * @param completeNeighbor 已经完成的邻居(0 上,1 右,2 下,3 左)
      */
     show(completeNeighbor?: number[]) {
         let key = this.getPosKey();
@@ -273,15 +277,39 @@ export class Grid extends Component {
         let cnb = completeNeighbor;
         let rawSize = Math.floor(this._size / Grid.tileSize);
         let max: number;
+        let min: number;
         if (cnb && cnb.length > 0) {
             max = (rawSize + 2) - 2;
+            min = 1;
         } else {
+            min = 0;
             max = rawSize - 1;
         }
-        arr.push({ x: 0, y: 0, tiles: Grid.horn });
-        arr.push({ x: max, y: 0, tiles: Grid.horn });
+        //set horn
+        arr.push({ x: min, y: min, tiles: Grid.horn });
+        arr.push({ x: max, y: min, tiles: Grid.horn });
         arr.push({ x: max, y: max, tiles: Grid.horn });
-        arr.push({ x: 0, y: max, tiles: Grid.horn });
+        arr.push({ x: min, y: max, tiles: Grid.horn });
+
+        //set edges
+        let centerSize = rawSize - 2;
+        if (centerSize < 1) return arr;
+
+        for (let i = 0; i < centerSize; i++) {
+            if (Grid.top) {  //top neighbor
+                arr.push({ x: min + 1 + i, y: min, tiles: Grid.top });
+            }
+            if (Grid.right) {  //right neighbor
+                arr.push({ x: max, y: min + 1 + i, tiles: Grid.right });
+            }
+            if (Grid.bottom) {  //bottom neighbor
+                arr.push({ x: min + 1 + i, y: max, tiles: Grid.bottom });
+            }
+            if (Grid.left) {  //left neighbor
+                arr.push({ x: min, y: min + 1 + i, tiles: Grid.left });
+            }
+        }
+
         return arr;
     }
 

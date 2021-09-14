@@ -25,7 +25,11 @@
                 "village_3_0",
                 0
             ]
-        ]
+        ],
+        "top":[["village_3_0",0]],
+        "right":[["village_3_0",0], ["village_3_1",0],["village_5_1",0],["village_7_1",0], ["village_3_2",0],["village_5_2",0],["village_7_3",0]],
+        "bottom":[["village_3_0",0]],
+        "left":[["village_3_0",0], ["village_3_1",0],["village_5_1",0],["village_7_1",0], ["village_3_2",0],["village_5_2",0],["village_7_3",0]]
     },
     { "resName": "test", "horn": [
             [

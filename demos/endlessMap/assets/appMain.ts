@@ -7,11 +7,13 @@ const { ccclass, property } = _decorator;
 
 @ccclass('AppMain')
 export class AppMain extends Component {
+    static CDNPath : string = `https://anseyuyin.github.io/wfc2D/`;
+
     async start() {
         //开启 动态合图
         macro.CLEANUP_IMAGE_CACHE = false;
         dynamicAtlasManager.enabled = true;
-        let dirPath = `https://anseyuyin.github.io/wfc2D/res/configs/`;
+        let dirPath = `${AppMain.CDNPath}res/configs/`;
         let _dataUrl = `${dirPath}endlessMap.cfg.json`;
         let req = await WfcLoader.xhrLoad(_dataUrl, "json");
         let datas: { resName: string }[] = req.response;
@@ -21,4 +23,9 @@ export class AppMain extends Component {
         var tile = this.node.scene.getComponentInChildren<TileMap>(TileMap);
         tile?.setRes(datas[0]);
     };
+}
+
+if(window && window.location && window.location.hostname.indexOf("github") == -1){
+    //set CNDPath of custom location Path
+    AppMain.CDNPath = `http://192.168.50.134:5500/`;
 }

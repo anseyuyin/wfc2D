@@ -1,7 +1,7 @@
 System.register(["./application.js"], function (_export, _context) {
   "use strict";
 
-  var createApplication;
+  var createApplication, canvas, $p, bcr;
 
   function loadJsListFile(url) {
     return new Promise(function (resolve, reject) {
@@ -45,10 +45,9 @@ System.register(["./application.js"], function (_export, _context) {
   }
 
   function findCanvas() {
-    var canvas = document.getElementById('GameCanvas');
-
+    // Use canvas in outer context
     if (!canvas || canvas.tagName !== 'CANVAS') {
-      console.error("Cannot find canvas(#GameCanvas)");
+      console.error("unknown canvas id:", el);
     }
 
     var width = canvas.width;
@@ -90,6 +89,11 @@ System.register(["./application.js"], function (_export, _context) {
       createApplication = _applicationJs.createApplication;
     }],
     execute: function () {
+      canvas = document.getElementById('GameCanvas');
+      $p = canvas.parentElement;
+      bcr = $p.getBoundingClientRect();
+      canvas.width = bcr.width;
+      canvas.height = bcr.height;
       createApplication({
         loadJsListFile: loadJsListFile,
         fetchWasm: fetchWasm
