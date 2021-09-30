@@ -9,6 +9,8 @@
 - [算法过程可视化](https://anseyuyin.github.io/wfc2D/demos/algorithmVisualization/) 
 - [无限地图](https://anseyuyin.github.io/wfc2D/demos/endlessMap/build/web-mobile/) 
 - [无限小镇](https://anseyuyin.github.io/wfc2D/demos/endlessTown/build/web-mobile/) 
+  
+  [![image](./res/info/endlessTownShow.gif)](https://anseyuyin.github.io/wfc2D/demos/endlessTown/build/web-mobile/)
 ### tools
 - [编辑工具](https://anseyuyin.github.io/wfc2D/demos/2DMapEditor/) 
 ## 快速开始
