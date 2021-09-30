@@ -1,0 +1,34 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+
+    <title>Cocos Creator | <%= projectName %></title>
+
+    <meta name="viewport" content="width=device-width,user-scalable=no,initial-scale=1, minimum-scale=1,maximum-scale=1"/>
+    <meta name="apple-mobile-web-app-capable" content="yes"/>
+    <meta name="full-screen" content="yes"/>
+    <meta name="screen-orientation" content="portrait"/>
+    <meta name="x5-fullscreen" content="true"/>
+    <meta name="360-fullscreen" content="true"/>
+    
+    <meta name="renderer" content="webkit"/>
+    <meta name="force-rendering" content="webkit"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+    
+    <link rel="stylesheet" type="text/css" href="style.css"/>
+    <link rel="icon" href="favicon.ico"/>
+	<script src="https://anseyuyin.github.io/wfc2D/bin/wfc2D.js" ></script>
+  </head>
+  <body>
+    <h1 class="header"><%= projectName %></h1>
+
+    <div id="GameDiv" style="width:<%= previewWidth %>px; height: <%= previewHeight %>px;">
+        <canvas id="GameCanvas" width="<%= previewWidth %>" height="<%= previewHeight %>"></canvas>
+    </div>
+    <p class="footer">
+      Created with <a href="https://www.cocos.com/products" title="Cocos Creator">Cocos Creator</a>
+    </p>
+    <%- include(cocosTemplate, {}) %>
+  </body>
+</html>
