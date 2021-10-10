@@ -24,6 +24,7 @@ export class Grid extends Component {
     private static collapseingMap: Map<string, boolean> = new Map();
     private static _wfcPool: WFC.WFC2D[] = [];
     private static _TileEventMap: { [key: string]: number } = {};
+    private static _event : baseEvent<string> = new baseEvent<string>();
 
     /** 坍缩完成 */
     public static readonly ON_COLLAPSED = "ON_COLLAPSED";
@@ -285,7 +286,8 @@ export class Grid extends Component {
 
         }
 
-        this._state
+        Grid._event.data = key;
+        EventMgr.dispatchEvent("gridShow",Grid._event)
     }
 
     hide() {
@@ -333,10 +335,10 @@ export class Grid extends Component {
     //刷新显示
     private refrashDisplay() {
         //test
-        let key = this.getPosKey();
-        console.log(`---- key : ${key}`);
+        let gkey = this.getPosKey();
+        console.log(`---- key : ${gkey}`);
 
-        let data = Grid.posDataMap.get(key);
+        let data = Grid.posDataMap.get(gkey);
         let _map = this._wfcSpMap;
         if (!data || !_map) return;
 
@@ -360,7 +362,7 @@ export class Grid extends Component {
                 this._tileEvent.data.tType = Grid._TileEventMap[imgResStr];
                 this._tileEvent.data.pos.x = (x + this._GridPos.x * size) * Grid.tileSize;
                 this._tileEvent.data.pos.y = (y + this._GridPos.y * size) * Grid.tileSize;
-                this._tileEvent.data.gPos = key;
+                this._tileEvent.data.gPos = gkey;
                 EventMgr.dispatchEvent("onTile", this._tileEvent);
             }
 

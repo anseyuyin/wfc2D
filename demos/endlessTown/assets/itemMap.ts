@@ -47,6 +47,7 @@ export class ItemMap extends Component {
     }
 
     private deleteOne(_item: Item) {
+        if (!_item || (_item as any)[ItemMap.IsInPool]) return;
         let idx: number = (_item as any)[ItemMap.ItemIdxTag];
         if (idx == null) return;
         (_item as any)[ItemMap.IsInPool] = true;
@@ -121,12 +122,13 @@ export class ItemMap extends Component {
         delete this._gridTilesMap[ev.data];
         arr.forEach((val) => {
             let _item = this._tileNodeMap[val];
-            if(_item){
+            if (_item) {
                 if (_item.node.parent) {
                     _item.node.parent.removeChild(_item.node);
                 }
                 this.deleteOne(_item); //入池
             }
+            delete this._tileNodeMap[val];
         });
 
         arr.length = 0;
@@ -136,7 +138,7 @@ export class ItemMap extends Component {
         // let a = true;
         // if (a) return;
         // console.log(`onTile : ${ev.data.pos.toString()} , ${ev.data.tType}`);
-        
+
         let tType = ev.data.tType;
         // if (tType != FloorType.grass) return;
         // if (tType != FloorType.beach) return;
@@ -144,16 +146,16 @@ export class ItemMap extends Component {
         let y = ev.data.pos.y;
         let gPos = ev.data.gPos;
         let posKey = `${x}_${y}`;
-        if(this._tileNodeMap[posKey]) return;   //当前位置已经有node 直接退出
+        if (this._tileNodeMap[posKey]) return;   //当前位置已经有node 直接退出
         //测试 草地都刷上 花
         let _idx: number = 0;
 
         //检查是否有缓存
-        let _state: number[] = null as any;
+        let _states: number[] = null as any;
         let mapIdx = this._tileIdxMap[posKey];
         if (mapIdx != null && !isNaN(mapIdx) && mapIdx != -1) {   //已经有数据
             _idx = mapIdx;
-            _state = this._tileStateMap[posKey];
+            _states = this._tileStateMap[posKey];
         } else if (mapIdx != undefined && isNaN(mapIdx) || mapIdx == -1) {
             return;     //刷过数据 空块
         } else {
@@ -203,7 +205,7 @@ export class ItemMap extends Component {
 
         _tNode.setPosition(_pos);
         //记录 状态
-        if (!_state) {
+        if (!_states) {
             let _i = this._datas[_idx];
             let _size = _i.item.size;
             //占用的 区域填空
@@ -216,20 +218,23 @@ export class ItemMap extends Component {
                     this._tileRectMap[pk] = posKey;
                 }
             }
+            _item.randomState();
 
-            let arr = this._gridTilesMap[gPos];
-            if (!arr) {
-                arr = this._gridTilesMap[gPos] = [];
-            }
-            arr.push(posKey);
-            this._tileNodeMap[posKey] = _item;
-            this._tileIdxMap[posKey] = _idx;
             let _tSta: number[] = [];
             _item.getState(_tSta);
             this._tileStateMap[posKey] = _tSta;
+        } else {
+            _item.setState(_states);
         }
 
-        _item.randomState();
+        //记录当前数据 到 map
+        let arr = this._gridTilesMap[gPos];
+        if (!arr) {
+            arr = this._gridTilesMap[gPos] = [];
+        }
+        arr.push(posKey);
+        this._tileNodeMap[posKey] = _item;
+        this._tileIdxMap[posKey] = _idx;
     }
 
     private tryClearTile(poskey: string) {

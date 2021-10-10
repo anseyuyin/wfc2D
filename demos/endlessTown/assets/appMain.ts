@@ -17,9 +17,9 @@ export class AppMain extends Component {
             ]
         ],
         "top":[["village_3_0",0]],
-        "right":[["village_3_0",0], ["village_3_1",0],["village_5_1",0],["village_7_1",0], ["village_3_2",0],["village_5_2",0],["village_7_3",0]],
+        "right":[["village_3_0",0]],
         "bottom":[["village_3_0",0]],
-        "left":[["village_3_0",0], ["village_3_1",0],["village_5_1",0],["village_7_1",0], ["village_3_2",0],["village_5_2",0],["village_7_3",0]]
+        "left":[["village_3_0",0]]
     }
     `;
 
@@ -42,5 +42,5 @@ export class AppMain extends Component {
 
 if (window && window.location && window.location.hostname.indexOf("github") == -1) {
     //set CNDPath of custom location Path
-    AppMain.CDNPath = `http://192.168.50.134:5500/`;
+    AppMain.CDNPath = `http://127.0.0.1:5500/`;
 }

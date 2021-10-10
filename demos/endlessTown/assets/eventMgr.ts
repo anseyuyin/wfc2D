@@ -29,4 +29,5 @@ export class baseEvent<T> {
 export class EventTypes {
     "onTile": baseEvent<{ pos: Vec2, tType: number, gPos: string }>;
     "offTile": baseEvent<string>;
+    "gridShow": baseEvent<string>;
 }
