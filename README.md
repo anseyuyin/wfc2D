@@ -41,7 +41,7 @@ for (var y = 0; y < mapWidth; y++) {
     for (var x = 0; x < mapHeigth; x++) {
         var imgData = resultMap[count];
         //图片资源名 , 类型 string
-        var imgName:  = imgData[0];
+        var imgName = imgData[0];
         //图片顺时针旋转次数（每次90度）, 类型 number 
         var rotate = imgData[1];
         //绘制 一个 瓦片到容器  (xxxDrawTile 替换成自己的绘制函数)
