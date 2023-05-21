@@ -38,9 +38,9 @@ var resultMap = wfc2d.collapse(mapWidth, mapHeigth);
 
 //绘制地图的每个瓦片
 var count = 0;
-for (var y = 0; y < mapWidth; y++) {
-    for (var x = 0; x < mapHeigth; x++) {
-        var imgData = resultMap[count];
+for (var y = 0; y < mapHeigth; y++) {
+    for (var x = 0; x < mapWidth; x++) {
+        var imgData = resultMap[count++];
         //图片资源名 , 类型 string
         var imgName = imgData[0];
         //图片顺时针旋转次数（每次90度）, 类型 number 
