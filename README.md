@@ -50,7 +50,7 @@ for (var y = 0; y < mapWidth; y++) {
 }
 
 ````
-- ##### 预设条件功能
+- ##### 预设条件(局部元素限定)功能
 ````javascript
 //加载一个配置资源
 var jsonConf = xxxloadJson(`https://anseyuyin.github.io/wfc2D/res/samples/Circuit/data.json`);
