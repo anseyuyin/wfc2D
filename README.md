@@ -13,6 +13,7 @@
   [![image](./res/info/endlessTownShow.gif)](https://anseyuyin.github.io/wfc2D/demos/endlessTown/build/web-mobile/)
 ### tools
 - [编辑工具](https://anseyuyin.github.io/wfc2D/demos/2DMapEditor/) 
+- [编辑工具使用文档](https://anseyuyin.github.io/wfc2D/blob/main/demos/2DMapEditor/README.md) 
 ## 快速开始
 - ##### 准备好演算数据
     获取方式一：直接测试样例 [res/samples/*](https://github.com/anseyuyin/wfc2D/blob/main/res/samples/)
