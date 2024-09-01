@@ -15,7 +15,7 @@ System.register([], function (exports_1, context_1) {
         function verb(n) { return function (v) { return step([n, v]); }; }
         function step(op) {
             if (f) throw new TypeError("Generator is already executing.");
-            while (_) try {
+            while (g && (g = 0, op[0] && (_ = 0)), _) try {
                 if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
                 if (y = 0, t) op = [op[0] & 2, t.value];
                 switch (op[0]) {
@@ -36,7 +36,7 @@ System.register([], function (exports_1, context_1) {
             if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
         }
     };
-    var Example2DMap;
+    var SeamlessMode, Example2DMap;
     var __moduleName = context_1 && context_1.id;
     function xhrLoad(url, type) {
         return new Promise(function (resolve, reject) {
@@ -59,6 +59,11 @@ System.register([], function (exports_1, context_1) {
     return {
         setters: [],
         execute: function () {
+            (function (SeamlessMode) {
+                SeamlessMode[SeamlessMode["None"] = 0] = "None";
+                SeamlessMode[SeamlessMode["Vertical"] = 1] = "Vertical";
+                SeamlessMode[SeamlessMode["Horizontal"] = 2] = "Horizontal";
+            })(SeamlessMode || (SeamlessMode = {}));
             Example2DMap = (function () {
                 function Example2DMap() {
                     this.currImgMap = {};
@@ -69,8 +74,18 @@ System.register([], function (exports_1, context_1) {
                     this.toRadian = Math.PI / 180;
                     this.filesID = "";
                     this.isCalculateing = false;
+                    this.lastMapSizeX = 1;
+                    this.lastMapSizeY = 1;
                     this.init();
                 }
+                Object.defineProperty(Example2DMap.prototype, "seamlessMode", {
+                    get: function () {
+                        return SeamlessMode[this.seamlessModeSelectOptionEle.value];
+                    },
+                    enumerable: false,
+                    configurable: true
+                });
+                ;
                 Example2DMap.prototype.init = function () {
                     console.log("init");
                     this.setUI();
@@ -81,7 +96,8 @@ System.register([], function (exports_1, context_1) {
                     var _this = this;
                     this.fileEle = document.getElementById("selectFiles");
                     this.fileEle.onchange = this.onFileChange.bind(this);
-                    this.selectOptionEle = document.getElementById("selectOption");
+                    this.importSampleSelectOptionEle = document.getElementById("importSampleSelectOption");
+                    this.seamlessModeSelectOptionEle = document.getElementById("seamlessModeSelectOption");
                     this.importFilesEle = document.getElementById("importFiles");
                     this.importFilesEle.onclick = this.onStart.bind(this);
                     this.importFilesEle.onclick(null);
@@ -104,10 +120,10 @@ System.register([], function (exports_1, context_1) {
                 };
                 Example2DMap.prototype.calculate = function () {
                     return __awaiter(this, void 0, void 0, function () {
-                        var samplesName, wfc2d, mapSizeX, mapSizeY, cSize, backoffMax, backoffQueueMax, capRate, imgMap, halfCSize, y, x, imgName, rotate, rot;
-                        var _a;
-                        return __generator(this, function (_b) {
-                            switch (_b.label) {
+                        var samplesName, wfc2d, mapSizeX, mapSizeY, cSize, backoffMax, backoffQueueMax, capRate, seamlessImgMap, knowns, edgeSize, _a, y, remapY, x, data, y, x, remapX, data, imgMap, error_1, halfCSize, y, x, imgName, rotate, rot;
+                        var _b;
+                        return __generator(this, function (_c) {
+                            switch (_c.label) {
                                 case 0:
                                     if (this.isCalculateing) {
                                         return [2];
@@ -117,7 +133,7 @@ System.register([], function (exports_1, context_1) {
                                         return [2];
                                     }
                                     this.isCalculateing = true;
-                                    samplesName = this.selectOptionEle.value;
+                                    samplesName = this.importSampleSelectOptionEle.value;
                                     if (!samplesName) {
                                         samplesName = this.filesID;
                                     }
@@ -131,18 +147,72 @@ System.register([], function (exports_1, context_1) {
                                     backoffMax = Number(this.backoffMaxEle.value);
                                     backoffQueueMax = Number(this.backoffQueueMaxEle.value);
                                     capRate = Number(this.backoffCapRateEle.value);
+                                    if (!(this.seamlessMode != SeamlessMode.None)) return [3, 5];
+                                    wfc2d.clearKnown();
+                                    seamlessImgMap = null;
+                                    knowns = [];
+                                    edgeSize = 2;
+                                    _a = this.seamlessMode;
+                                    switch (_a) {
+                                        case SeamlessMode.Vertical: return [3, 1];
+                                        case SeamlessMode.Horizontal: return [3, 3];
+                                    }
+                                    return [3, 5];
+                                case 1: return [4, wfc2d.collapse(mapSizeX, edgeSize, backoffMax, backoffQueueMax, capRate)];
+                                case 2:
+                                    seamlessImgMap = _c.sent();
+                                    for (y = 0; y < edgeSize; y++) {
+                                        remapY = y == 0 ? mapSizeY - 1 : 0;
+                                        for (x = 0; x < mapSizeX; x++) {
+                                            data = seamlessImgMap.shift();
+                                            knowns.push({
+                                                x: x,
+                                                y: remapY,
+                                                tiles: [data]
+                                            });
+                                        }
+                                    }
+                                    wfc2d.setKnown(knowns);
+                                    return [3, 5];
+                                case 3: return [4, wfc2d.collapse(edgeSize, mapSizeY, backoffMax, backoffQueueMax, capRate)];
+                                case 4:
+                                    seamlessImgMap = _c.sent();
+                                    for (y = 0; y < mapSizeY; y++) {
+                                        for (x = 0; x < edgeSize; x++) {
+                                            remapX = x == 0 ? mapSizeX - 1 : 0;
+                                            data = seamlessImgMap.shift();
+                                            knowns.push({
+                                                x: remapX,
+                                                y: y,
+                                                tiles: [data]
+                                            });
+                                        }
+                                    }
+                                    wfc2d.setKnown(knowns);
+                                    return [3, 5];
+                                case 5:
+                                    _c.trys.push([5, 7, , 8]);
                                     return [4, wfc2d.collapse(mapSizeX, mapSizeY, backoffMax, backoffQueueMax, capRate)];
-                                case 1:
-                                    imgMap = _b.sent();
+                                case 6:
+                                    imgMap = _c.sent();
+                                    return [3, 8];
+                                case 7:
+                                    error_1 = _c.sent();
+                                    this.isCalculateing = false;
+                                    alert("\u751F\u6210\u5931\u8D25,\u8BF7\u518D\u6B21\u5C1D\u8BD5\u3002\n \u63D0\u793A\uFF1A(\u5982\u679C\u6210\u529F\u7387\u4F4E,\u53EF\u4EE5\u4FEE\u6539\u53C2\u6570\u540E\u518D\u6B21\u5C1D\u8BD5) \n ".concat(error_1));
+                                    return [3, 8];
+                                case 8:
                                     halfCSize = cSize * 0.5;
                                     this.context2D.resetTransform();
                                     this.context2D.fillStyle = "#aaffff";
-                                    this.context2D.fillRect(0, 0, cSize * mapSizeX, cSize * mapSizeY);
+                                    this.context2D.fillRect(0, 0, cSize * this.lastMapSizeX, cSize * this.lastMapSizeY);
+                                    this.lastMapSizeX = mapSizeX;
+                                    this.lastMapSizeY = mapSizeY;
                                     for (y = 0; y < mapSizeY; y++) {
                                         for (x = 0; x < mapSizeX; x++) {
                                             imgName = void 0;
                                             rotate = void 0;
-                                            _a = imgMap.shift(), imgName = _a[0], rotate = _a[1];
+                                            _b = imgMap.shift(), imgName = _b[0], rotate = _b[1];
                                             this.context2D.resetTransform();
                                             rot = rotate * 90 * this.toRadian;
                                             this.context2D.translate(x * cSize + halfCSize, y * cSize + halfCSize);
@@ -165,7 +235,7 @@ System.register([], function (exports_1, context_1) {
                     this.canvasEle.height = cSize * mapSizeY;
                 };
                 Example2DMap.prototype.onStart = function () {
-                    var samplesName = this.selectOptionEle.value;
+                    var samplesName = this.importSampleSelectOptionEle.value;
                     if (samplesName) {
                         this.toLoadImport();
                     }
@@ -180,7 +250,7 @@ System.register([], function (exports_1, context_1) {
                             switch (_a.label) {
                                 case 0:
                                     this.resLoaded = false;
-                                    samplesName = this.selectOptionEle.value;
+                                    samplesName = this.importSampleSelectOptionEle.value;
                                     if (this.dataLoginMap[samplesName]) {
                                         return [2];
                                     }
@@ -192,13 +262,13 @@ System.register([], function (exports_1, context_1) {
                                 case 1:
                                     this.dataLoginMap[samplesName] = true;
                                     basePath = "../../res/samples/";
-                                    _dataUrl = "" + basePath + samplesName + "/data.json";
+                                    _dataUrl = "".concat(basePath).concat(samplesName, "/data.json");
                                     return [4, xhrLoad(_dataUrl, "json")];
                                 case 2:
                                     req = _a.sent();
                                     data = req.response;
                                     if (!data) {
-                                        alert("\u6CA1\u627E\u5230 " + _dataUrl + "!");
+                                        alert("\u6CA1\u627E\u5230 ".concat(_dataUrl, "!"));
                                         return [2];
                                     }
                                     this.currConfig = data;
@@ -206,7 +276,7 @@ System.register([], function (exports_1, context_1) {
                                     imgPormies = [];
                                     _loop_1 = function (k) {
                                         var _temp = data.tiles[k];
-                                        var url = "" + basePath + samplesName + "/" + k + _temp[0];
+                                        var url = "".concat(basePath).concat(samplesName, "/").concat(k).concat(_temp[0]);
                                         var img = new Image();
                                         img.width = img.height = cSize;
                                         img.src = url;
@@ -259,7 +329,7 @@ System.register([], function (exports_1, context_1) {
                         }
                         _this.currConfig = _config;
                         _this.currImgMap = _imgMap;
-                        _this.selectOptionEle.value = "";
+                        _this.importSampleSelectOptionEle.value = "";
                     };
                     var cSize = Number(this.tileSizeEle.value);
                     var waitCount = 0;

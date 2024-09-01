@@ -3,7 +3,8 @@ export declare class Example2DMap {
     private canvasEle;
     private context2D;
     private fileEle;
-    private selectOptionEle;
+    private importSampleSelectOptionEle;
+    private seamlessModeSelectOptionEle;
     private importFilesEle;
     private tileSizeEle;
     private tileXCountEle;
@@ -20,6 +21,9 @@ export declare class Example2DMap {
     private toRadian;
     private filesID;
     private isCalculateing;
+    private get seamlessMode();
+    private lastMapSizeX;
+    private lastMapSizeY;
     private init;
     private setUI;
     private initCanvas;

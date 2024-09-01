@@ -24,6 +24,18 @@ function xhrLoad(url: string, type: XMLHttpRequestResponseType): Promise<XMLHttp
 
 type imageMap = { [imgName: string]: HTMLImageElement };
 
+/**
+ * 无缝模式
+ */
+enum SeamlessMode {
+    /** 无效 */
+    None,
+    /** 垂直方向 */
+    Vertical,
+    /** 水平方向 */
+    Horizontal,
+}
+
 /** 2d map WaveFunctionCollapse 样例 */
 export class Example2DMap {
 
@@ -34,7 +46,8 @@ export class Example2DMap {
     private canvasEle: HTMLCanvasElement;
     private context2D: CanvasRenderingContext2D;
     private fileEle: HTMLInputElement;
-    private selectOptionEle: HTMLSelectElement;
+    private importSampleSelectOptionEle: HTMLSelectElement;
+    private seamlessModeSelectOptionEle: HTMLSelectElement;
     private importFilesEle: HTMLInputElement;
     private tileSizeEle: HTMLInputElement;
     private tileXCountEle: HTMLInputElement;
@@ -53,6 +66,12 @@ export class Example2DMap {
     private toRadian = Math.PI / 180;
     private filesID = "";
     private isCalculateing = false;
+    // private seamlessMode: SeamlessMode = SeamlessMode.Vertical;
+    private get seamlessMode(): SeamlessMode {
+        return SeamlessMode[this.seamlessModeSelectOptionEle.value];
+    };
+    private lastMapSizeX: number = 1;
+    private lastMapSizeY: number = 1;
 
     private init() {
         console.log(`init`);
@@ -67,7 +86,8 @@ export class Example2DMap {
         this.fileEle.onchange = this.onFileChange.bind(this);
 
         //file load
-        this.selectOptionEle = document.getElementById("selectOption") as HTMLSelectElement;
+        this.importSampleSelectOptionEle = document.getElementById("importSampleSelectOption") as HTMLSelectElement;
+        this.seamlessModeSelectOptionEle = document.getElementById("seamlessModeSelectOption") as HTMLSelectElement;
         this.importFilesEle = document.getElementById("importFiles") as HTMLInputElement;
         this.importFilesEle.onclick = this.onStart.bind(this);
         this.importFilesEle.onclick(null);
@@ -101,7 +121,7 @@ export class Example2DMap {
             return;
         }
         this.isCalculateing = true;
-        let samplesName = this.selectOptionEle.value;
+        let samplesName = this.importSampleSelectOptionEle.value;
         if (!samplesName) { samplesName = this.filesID; }
         let wfc2d = this.wfc2dMap[samplesName];
         if (!wfc2d) {
@@ -113,13 +133,70 @@ export class Example2DMap {
         let backoffMax = Number(this.backoffMaxEle.value);
         let backoffQueueMax = Number(this.backoffQueueMaxEle.value);
         let capRate = Number(this.backoffCapRateEle.value);
-        let imgMap = await wfc2d.collapse(mapSizeX, mapSizeY, backoffMax, backoffQueueMax, capRate);
+        //处理 无缝模式
+        if (this.seamlessMode != SeamlessMode.None) {
+            //清理 wfc限定数据
+            wfc2d.clearKnown();
+
+            let seamlessImgMap: [string, number][] = null;
+            let knowns: { x: number, y: number, tiles: [string, number][] }[] = [];
+            const edgeSize = 2;
+            switch (this.seamlessMode) {
+                case SeamlessMode.Vertical:
+                    //生成 衔接边的数据 
+                    seamlessImgMap = await wfc2d.collapse(mapSizeX, edgeSize, backoffMax, backoffQueueMax, capRate);
+                    for (let y = 0; y < edgeSize; y++) {
+                        let remapY = y == 0 ? mapSizeY - 1 : 0;
+                        for (let x = 0; x < mapSizeX; x++) {
+                            let data = seamlessImgMap.shift();
+                            knowns.push({
+                                x,
+                                y: remapY,
+                                tiles: [data]
+                            });
+                        }
+                    }
+                    //设置 衔接边 到 wfc的限定
+                    wfc2d.setKnown(knowns);
+                    break;
+                case SeamlessMode.Horizontal:
+                    //生成 衔接边的数据 
+                    seamlessImgMap = await wfc2d.collapse(edgeSize, mapSizeY, backoffMax, backoffQueueMax, capRate);
+                    for (let y = 0; y < mapSizeY; y++) {
+                        for (let x = 0; x < edgeSize; x++) {
+                            let remapX = x == 0 ? mapSizeX - 1 : 0;
+                            let data = seamlessImgMap.shift();
+                            knowns.push({
+                                x: remapX,
+                                y,
+                                tiles: [data]
+                            });
+                        }
+                    }
+                    //设置 衔接边 到 wfc的限定
+                    wfc2d.setKnown(knowns);
+                    break;
+            }
+        }
+
+        let imgMap: [string, number][];
+        try {
+            imgMap = await wfc2d.collapse(mapSizeX, mapSizeY, backoffMax, backoffQueueMax, capRate);
+        } catch (error) {
+            this.isCalculateing = false;
+
+            alert(`生成失败,请再次尝试。\n 提示：(如果成功率低,可以修改参数后再次尝试) \n ${error}`);
+        }
 
         let halfCSize = cSize * 0.5;
         //clear 
         this.context2D.resetTransform();
         this.context2D.fillStyle = `#aaffff`;
-        this.context2D.fillRect(0, 0, cSize * mapSizeX, cSize * mapSizeY);
+        this.context2D.fillRect(0, 0, cSize * this.lastMapSizeX, cSize * this.lastMapSizeY);
+
+        //cache size
+        this.lastMapSizeX = mapSizeX;
+        this.lastMapSizeY = mapSizeY;
 
         // this.context2D.rotate(30 * this.toRadian);//旋转
         //draw
@@ -151,7 +228,7 @@ export class Example2DMap {
 
     /** 当选择加载导入样例 */
     private onStart() {
-        let samplesName = this.selectOptionEle.value;
+        let samplesName = this.importSampleSelectOptionEle.value;
         if (samplesName) {
             this.toLoadImport();
         } else if (this.currConfig && this.currImgMap) {
@@ -161,7 +238,7 @@ export class Example2DMap {
 
     private async toLoadImport() {
         this.resLoaded = false;
-        let samplesName = this.selectOptionEle.value;
+        let samplesName = this.importSampleSelectOptionEle.value;
         if (this.dataLoginMap[samplesName]) { return; }
         let d = this.dataMap[samplesName];
         if (d) {
@@ -234,7 +311,7 @@ export class Example2DMap {
             this.currConfig = _config;
             this.currImgMap = _imgMap;
             //计算
-            this.selectOptionEle.value = "";
+            this.importSampleSelectOptionEle.value = "";
         };
         let cSize = Number(this.tileSizeEle.value);
         let waitCount = 0;
